@@ -36,23 +36,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK command-line tools and packages
+      - name: Install Android SDK
         run: |
           set -e
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          mkdir -p $ANDROID_SDK_ROOT
           cd $ANDROID_SDK_ROOT
-          # download command-line tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip
           unzip -q cmdline.zip -d cmdline-tools
-          # move into expected layout
-          if [ -d cmdline-tools/cmdline-tools ]; then
-            mv cmdline-tools/cmdline-tools cmdline-tools/latest || true
-          else
-            mv cmdline-tools cmdline-tools/latest || true
-          fi
-
+          mv cmdline-tools cmdline-tools/latest || true
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
-          # Install minimal SDK packages. Adjust platform/build-tools/ndk versions if your project requires different ones.
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-31" "build-tools;31.0.0" "cmake;3.22.1" || true
-          # If your project needs a specific NDK, uncomment and set the desired version below (example
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/*.apk
