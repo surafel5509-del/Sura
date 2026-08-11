@@ -13,8 +13,8 @@ jobs:
     name: Build debug APK
     runs-on: ubuntu-latest
     env:
-      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
-      ANDROID_HOME: ${{ runner.temp }}/android-sdk
+      ANDROID_SDK_ROOT: /home/runner/android-sdk
+      ANDROID_HOME: /home/runner/android-sdk
 
     steps:
       - name: Checkout
@@ -38,7 +38,6 @@ jobs:
 
       - name: Install Android SDK
         run: |
-          set -e
           mkdir -p $ANDROID_SDK_ROOT
           cd $ANDROID_SDK_ROOT
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip
