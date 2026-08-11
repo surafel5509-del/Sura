@@ -38,11 +38,12 @@ jobs:
 
       - name: Install Android SDK
         run: |
-          mkdir -p $ANDROID_SDK_ROOT
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip
-          unzip -q cmdline.zip -d cmdline-tools
-          mv cmdline-tools cmdline-tools/latest || true
+          unzip -q cmdline.zip -d temp-cmdline
+          mv temp-cmdline/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          rm -f cmdline.zip
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
