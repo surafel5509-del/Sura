@@ -4,7 +4,11 @@
 #include <vector>
 #include <memory>
 #include <future>
+#ifdef ANDROID
 #include <android/asset_manager.h>
+#else
+struct AAssetManager;
+#endif
 #include "ThreadPool.h"
 #include "LRUCache.h"
 

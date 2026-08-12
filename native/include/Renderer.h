@@ -3,7 +3,11 @@
 #include <GLES3/gl3.h>
 #include <memory>
 #include <vector>
+#ifdef ANDROID
 #include <android/asset_manager.h>
+#else
+struct AAssetManager;
+#endif
 #include "Shader.h"
 #include "Texture.h"
 #include "TextureAtlas.h"

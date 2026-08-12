@@ -3,10 +3,12 @@
 #include <atomic>
 #include <memory>
 #include <functional>
+#include <cstdint>
 
 #include "ThreadPool.h"
 
 struct android_app;
+struct AInputEvent;
 
 namespace future2d {
 

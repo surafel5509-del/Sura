@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /workspaces/2D-game-engine/native
+CMAKE_SOURCE_DIR = /workspaces/Sura/native
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /workspaces/2D-game-engine/native/build
+CMAKE_BINARY_DIR = /workspaces/Sura/native/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /workspaces/2D-game-engine/native/build/CMakeFiles /workspaces/2D-game-engine/native/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /workspaces/Sura/native/build/CMakeFiles /workspaces/Sura/native/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /workspaces/2D-game-engine/native/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /workspaces/Sura/native/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -393,30 +393,6 @@ src/ThreadPool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/future2d.dir/build.make CMakeFiles/future2d.dir/src/ThreadPool.cpp.s
 .PHONY : src/ThreadPool.cpp.s
 
-src/android_main.o: src/android_main.cpp.o
-.PHONY : src/android_main.o
-
-# target to build an object file
-src/android_main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/future2d.dir/build.make CMakeFiles/future2d.dir/src/android_main.cpp.o
-.PHONY : src/android_main.cpp.o
-
-src/android_main.i: src/android_main.cpp.i
-.PHONY : src/android_main.i
-
-# target to preprocess a source file
-src/android_main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/future2d.dir/build.make CMakeFiles/future2d.dir/src/android_main.cpp.i
-.PHONY : src/android_main.cpp.i
-
-src/android_main.s: src/android_main.cpp.s
-.PHONY : src/android_main.s
-
-# target to generate assembly for a file
-src/android_main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/future2d.dir/build.make CMakeFiles/future2d.dir/src/android_main.cpp.s
-.PHONY : src/android_main.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -459,9 +435,6 @@ help:
 	@echo "... src/ThreadPool.o"
 	@echo "... src/ThreadPool.i"
 	@echo "... src/ThreadPool.s"
-	@echo "... src/android_main.o"
-	@echo "... src/android_main.i"
-	@echo "... src/android_main.s"
 .PHONY : help
 
 

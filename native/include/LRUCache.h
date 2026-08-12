@@ -35,6 +35,13 @@ public:
         return it->second.first;
     }
 
+    void reset(size_t capacity) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        capacity_ = capacity;
+        map_.clear();
+        list_.clear();
+    }
+
 private:
     size_t capacity_;
     std::list<Key> list_;

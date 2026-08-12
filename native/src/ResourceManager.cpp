@@ -1,7 +1,11 @@
 #include "../include/ResourceManager.h"
 #include <fstream>
 #include <sstream>
+#ifdef ANDROID
 #include <android/log.h>
+#else
+#include <cstdio>
+#endif
 
 static std::string readFileToString(const std::string& path) {
     std::ifstream ifs(path);
@@ -17,7 +21,11 @@ std::shared_ptr<Shader> ResourceManager::loadShaderFromFiles(const std::string& 
     std::string vsrc = readFileToString(vertexPath);
     std::string fsrc = readFileToString(fragmentPath);
     if (vsrc.empty() || fsrc.empty()) {
+#ifdef ANDROID
         __android_log_print(ANDROID_LOG_WARN, "Future2D", "Failed to read shader files: %s %s", vertexPath.c_str(), fragmentPath.c_str());
+#else
+        std::fprintf(stderr, "Future2D: Failed to read shader files: %s %s\n", vertexPath.c_str(), fragmentPath.c_str());
+#endif
         return nullptr;
     }
     auto shader = std::make_shared<Shader>();

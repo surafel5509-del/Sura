@@ -21,8 +21,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/future2d.dir/src/TextureAtlas.cpp.o.d"
   "CMakeFiles/future2d.dir/src/ThreadPool.cpp.o"
   "CMakeFiles/future2d.dir/src/ThreadPool.cpp.o.d"
-  "CMakeFiles/future2d.dir/src/android_main.cpp.o"
-  "CMakeFiles/future2d.dir/src/android_main.cpp.o.d"
   "libfuture2d.pdb"
   "libfuture2d.so"
 )

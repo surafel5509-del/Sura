@@ -1,0 +1,84 @@
+name: Build Debug APK
+
+on:
+  push:
+    branches:
+      - main
+      - 'codespace-**'
+  workflow_dispatch: {}
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
+      GRADLE_VERSION: 9.4
+      ANDROID_BUILD_TOOLS: 33.0.2
+      ANDROID_API_LEVEL: 33
+      ANDROID_NDK_VERSION: 25.1.8937393
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install unzip and wget
+        run: sudo apt-get update && sudo apt-get install -y unzip wget
+
+      - name: Download Android command line tools
+        run: |
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          cd "$ANDROID_SDK_ROOT/cmdline-tools"
+          TOOL_Z=commandlinetools-linux_latest.zip
+          wget -q -O "$TOOL_Z" https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q "$TOOL_Z" -d tmp && rm -f "$TOOL_Z"
+          # commandline tools unpack to a folder named cmdline-tools; move into versioned folder
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          mv tmp/cmdline-tools/* "$ANDROID_SDK_ROOT/cmdline-tools/latest/" || true
+
+      - name: Update PATH for sdkmanager
+        run: |
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+
+      - name: Install Android SDK components
+        run: |
+          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --install "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" "ndk;${ANDROID_NDK_VERSION}" "cmdline-tools;latest"
+
+      - name: Accept licenses
+        run: yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
+
+      - name: Install Gradle
+        run: |
+          mkdir -p /opt/gradle
+          wget -q -O gradle.zip https://services.gradle.org/distributions/gradle-${{ env.GRADLE_VERSION }}-bin.zip
+          unzip -q gradle.zip -d /opt/gradle && rm gradle.zip
+          echo "/opt/gradle/gradle-${{ env.GRADLE_VERSION }}/bin" >> $GITHUB_PATH
+
+      - name: Show environment
+        run: |
+          java -version
+          gradle -v
+          sdkmanager --version || true
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          # prefer wrapper if it exists
+          if [ -x ./gradlew ]; then
+            ./gradlew assembleDebug --no-daemon
+          else
+            gradle assembleDebug --no-daemon
+          fi
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

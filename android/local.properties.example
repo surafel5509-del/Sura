@@ -1,0 +1,5 @@
+# Example local.properties for Android SDK/NDK locations
+# Copy this file to android/local.properties and edit the paths to match your system.
+
+sdk.dir=/home/youruser/Android/Sdk
+ndk.dir=/home/youruser/Android/Sdk/ndk/25.1.8937393

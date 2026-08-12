@@ -1,17 +1,19 @@
 #include "../include/LuaVM.h"
 #include "../include/Physics.h"
+#ifdef ANDROID
 #include <android/log.h>
-
-#if __has_include(<lua.hpp>)
-#include <lua.hpp>
-#define FUTURE2D_HAS_LUA 1
-#elif __has_include(<lua.h>)
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-#define FUTURE2D_HAS_LUA 1
 #else
-#define FUTURE2D_HAS_LUA 0
+#include <cstdio>
+#endif
+
+#if FUTURE2D_HAS_LUA
+#  if __has_include(<lua.hpp>)
+#    include <lua.hpp>
+#  else
+#    include <lua.h>
+#    include <lauxlib.h>
+#    include <lualib.h>
+#  endif
 #endif
 
 namespace future2d {
@@ -31,8 +33,8 @@ LuaVM::~LuaVM() {
 #endif
 }
 
-static int l_createBox(lua_State* L) {
 #if FUTURE2D_HAS_LUA
+static int l_createBox(lua_State* L) {
     LuaVM::Impl* impl = (LuaVM::Impl*)lua_touserdata(L, lua_upvalueindex(1));
     if (!impl || !impl->physics) { lua_pushinteger(L, -1); return 1; }
     float x = (float)luaL_checknumber(L, 1);
@@ -43,10 +45,8 @@ static int l_createBox(lua_State* L) {
     int id = impl->physics->createBox(x, y, hx, hy, dyn != 0);
     lua_pushinteger(L, id);
     return 1;
-#else
-    (void)L; return 0;
-#endif
 }
+#endif
 
 bool LuaVM::init(PhysicsWorld* physics) {
 #if FUTURE2D_HAS_LUA
@@ -70,7 +70,11 @@ bool LuaVM::doString(const std::string& code, const std::string& name) {
     int r = luaL_loadbuffer(impl_->L, code.c_str(), code.size(), name.c_str()) || lua_pcall(impl_->L, 0, LUA_MULTRET, 0);
     if (r) {
         const char* msg = lua_tostring(impl_->L, -1);
+#ifdef ANDROID
         __android_log_print(ANDROID_LOG_ERROR, "Future2D::LuaVM", "Lua error: %s", msg ? msg : "<error>");
+#else
+        fprintf(stderr, "Lua error: %s\n", msg ? msg : "<error>");
+#endif
         lua_pop(impl_->L, 1);
         return false;
     }

@@ -1,5 +1,9 @@
 #include "../include/GLContext.h"
+#ifdef ANDROID
 #include <android/log.h>
+#else
+#include <cstdio>
+#endif
 
 namespace future2d {
 
@@ -8,6 +12,7 @@ GLContext::GLContext() {}
 GLContext::~GLContext() { destroy(); }
 
 bool GLContext::create(ANativeWindow* window) {
+#ifdef ANDROID
     if (!window) return false;
 
     display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -61,11 +66,20 @@ bool GLContext::create(ANativeWindow* window) {
     eglQuerySurface(display_, surface_, EGL_WIDTH, &width_);
     eglQuerySurface(display_, surface_, EGL_HEIGHT, &height_);
 
+#ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "Future2D", "GLContext created %dx%d", width_, height_);
+#else
+    std::printf("Future2D: GLContext created %dx%d\n", width_, height_);
+#endif
     return true;
+#else
+    (void)window;
+    return false;
+#endif
 }
 
 void GLContext::destroy() {
+#ifdef ANDROID
     if (display_ != EGL_NO_DISPLAY) {
         eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         if (context_ != EGL_NO_CONTEXT) eglDestroyContext(display_, context_);
@@ -75,18 +89,34 @@ void GLContext::destroy() {
     display_ = EGL_NO_DISPLAY;
     context_ = EGL_NO_CONTEXT;
     surface_ = EGL_NO_SURFACE;
+#else
+    (void)display_;
+    (void)context_;
+    (void)surface_;
+#endif
 }
 
 void GLContext::makeCurrent() {
+#ifdef ANDROID
     if (display_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE) {
         eglMakeCurrent(display_, surface_, surface_, context_);
     }
+#else
+    (void)display_;
+    (void)surface_;
+    (void)context_;
+#endif
 }
 
 void GLContext::swapBuffers() {
+#ifdef ANDROID
     if (display_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE) {
         eglSwapBuffers(display_, surface_);
     }
+#else
+    (void)display_;
+    (void)surface_;
+#endif
 }
 
 } // namespace future2d

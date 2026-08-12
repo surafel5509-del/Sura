@@ -1,10 +1,18 @@
 #include "../include/Shader.h"
+#ifdef ANDROID
 #include <android/log.h>
+#else
+#include <cstdio>
+#endif
 #include <vector>
 #include <cassert>
 
 static void logGlError(const char* tag, const std::string& msg) {
+#ifdef ANDROID
     __android_log_print(ANDROID_LOG_ERROR, tag, "%s", msg.c_str());
+#else
+    std::fprintf(stderr, "%s: %s\n", tag, msg.c_str());
+#endif
 }
 
 Shader::Shader() {}

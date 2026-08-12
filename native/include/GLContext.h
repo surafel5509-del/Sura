@@ -2,7 +2,11 @@
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
+#ifdef ANDROID
 #include <android/native_window.h>
+#else
+struct ANativeWindow;
+#endif
 
 namespace future2d {
 

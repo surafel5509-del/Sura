@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DFUTURE2D_HAS_LUA=0 -Dfuture2d_EXPORTS
 
-CXX_INCLUDES = -I/workspaces/2D-game-engine/native/include
+CXX_INCLUDES = -I/workspaces/Sura/native/include
 
-CXX_FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC -Wall -Wextra -O2
+CXX_FLAGS = -std=gnu++20 -fPIC -Wall -Wextra -O2
 

@@ -1,5 +1,9 @@
 #include "../include/Physics.h"
+#ifdef ANDROID
 #include <android/log.h>
+#else
+#include <cstdio>
+#endif
 #include <vector>
 #include <cmath>
 #include "../include/Renderer.h"
@@ -87,6 +91,8 @@ PhysicsWorld::~PhysicsWorld() {
 void PhysicsWorld::step(float dt, int velocityIterations, int positionIterations) {
 #if FUTURE2D_HAS_BOX2D
     if (impl_->world) impl_->world->Step(dt, velocityIterations, positionIterations);
+#else
+    (void)dt; (void)velocityIterations; (void)positionIterations;
 #endif
 }
 
@@ -107,6 +113,7 @@ int PhysicsWorld::createBox(float x, float y, float hx, float hy, bool dynamic) 
     impl_->bodies.push_back(body);
     return static_cast<int>(impl_->bodies.size() - 1);
 #else
+    (void)x; (void)y; (void)hx; (void)hy; (void)dynamic;
     return -1;
 #endif
 }
@@ -129,6 +136,7 @@ int PhysicsWorld::createCircle(float x, float y, float r, bool dynamic) {
     impl_->bodies.push_back(body);
     return static_cast<int>(impl_->bodies.size() - 1);
 #else
+    (void)x; (void)y; (void)r; (void)dynamic;
     return -1;
 #endif
 }
@@ -138,6 +146,8 @@ void PhysicsWorld::applyForce(int bodyId, float fx, float fy) {
     if (bodyId < 0 || bodyId >= static_cast<int>(impl_->bodies.size())) return;
     b2Body* b = impl_->bodies[bodyId];
     b->ApplyForceToCenter(b2Vec2(fx, fy), true);
+#else
+    (void)bodyId; (void)fx; (void)fy;
 #endif
 }
 
@@ -164,6 +174,7 @@ std::pair<float,float> PhysicsWorld::getBodyPosition(int bodyId) const {
     b2Vec2 p = b->GetPosition();
     return {p.x, p.y};
 #else
+    (void)bodyId;
     return {0.0f, 0.0f};
 #endif
 }
@@ -174,6 +185,7 @@ float PhysicsWorld::getBodyAngle(int bodyId) const {
     b2Body* b = impl_->bodies[bodyId];
     return b->GetAngle();
 #else
+    (void)bodyId;
     return 0.0f;
 #endif
 }

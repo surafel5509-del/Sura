@@ -1,0 +1,5 @@
+Placeholder APK file for repository use.
+
+This is a placeholder file created by automation because the build environment
+did not have an Android SDK/NDK configured. Replace this file with a real
+`app-debug.apk` produced by running the build locally (see `android/build-apk.sh`).

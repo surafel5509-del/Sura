@@ -1,9 +1,11 @@
 #include "../include/TextureAtlas.h"
+#ifdef ANDROID
 #include <android/log.h>
+#else
+#include <cstdio>
+#endif
 #include <cstring>
 #include <climits>
-
-static void LOGE(const char* msg) { __android_log_print(ANDROID_LOG_ERROR, "Future2D", "%s", msg); }
 
 namespace future2d {
 
@@ -13,6 +15,7 @@ TextureAtlas::~TextureAtlas() { if (tex_) glDeleteTextures(1, &tex_); }
 
 bool TextureAtlas::create(int width, int height, bool rgba8) {
     if (width <= 0 || height <= 0) return false;
+    (void)rgba8;
     w_ = width; h_ = height;
     glGenTextures(1, &tex_);
     glBindTexture(GL_TEXTURE_2D, tex_);
@@ -40,7 +43,6 @@ std::optional<AtlasRegion> TextureAtlas::insert(int ww, int hh, const uint8_t* r
     for (size_t i = 0; i < skyline.size(); ++i) {
         int x = skyline[i].x;
         int y = skyline[i].y;
-        int widthLeft = 0;
         int j = static_cast<int>(i);
         int maxY = y;
         int span = 0;

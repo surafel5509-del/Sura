@@ -1,11 +1,27 @@
 #include "../include/Renderer.h"
+#ifdef ANDROID
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#else
+#include <cstdio>
+#endif
 #include <cstring>
 
-static void LOGI(const char* msg) { __android_log_print(ANDROID_LOG_INFO, "Future2D", "%s", msg); }
-static void LOGE(const char* msg) { __android_log_print(ANDROID_LOG_ERROR, "Future2D", "%s", msg); }
+static void LOGI(const char* msg) {
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "Future2D", "%s", msg);
+#else
+    std::fprintf(stdout, "Future2D: %s\n", msg);
+#endif
+}
+static void LOGE(const char* msg) {
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_ERROR, "Future2D", "%s", msg);
+#else
+    std::fprintf(stderr, "Future2D: %s\n", msg);
+#endif
+}
 
 namespace future2d {
 
@@ -30,7 +46,8 @@ static const char* defaultFrag =
     "uniform sampler2D uTex[8];\n"
     "out vec4 fragColor;\n"
     "void main() {\n"
-    "  int idx = int(round(vTexIndex * 7.0));\n"
+    "  int idx = int(vTexIndex + 0.5);\n"
+    "  idx = clamp(idx, 0, 7);\n"
     "  vec4 c = texture(uTex[idx], vUV);\n"
     "  fragColor = c * vColor;\n"
     "}\n";
@@ -46,6 +63,7 @@ bool Renderer::createAtlas(int width, int height) {
 
 std::string Renderer::loadAssetText(const char* path) {
     if (!assets_) return std::string();
+#ifdef ANDROID
     AAsset* asset = AAssetManager_open(assets_, path, AASSET_MODE_BUFFER);
     if (!asset) return std::string();
     off_t len = AAsset_getLength(asset);
@@ -55,6 +73,10 @@ std::string Renderer::loadAssetText(const char* path) {
     AAsset_close(asset);
     if (r <= 0) return std::string();
     return s;
+#else
+    (void)path;
+    return std::string();
+#endif
 }
 
 bool Renderer::createBuffers() {
@@ -244,6 +266,7 @@ void Renderer::updateProjection() {
 void Renderer::begin() {
     spriteCount_ = 0;
     vertexBuffer_.clear();
+    currentTexture_ = 0;
     // enable blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -300,8 +323,7 @@ void Renderer::drawSprite(GLuint texId, float x, float y, float w, float h,
         vertexBuffer_.push_back(r);
         vertexBuffer_.push_back(g);
         vertexBuffer_.push_back(b);
-        // store slot as normalized float in [0,1) by dividing by MaxTextureSlots
-        vertexBuffer_.push_back(static_cast<float>(slot) / static_cast<float>(MaxTextureSlots));
+        vertexBuffer_.push_back(static_cast<float>(slot));
     };
 
     pushVert(x0, y0, u0, v0);
@@ -326,8 +348,12 @@ void Renderer::end() {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, textureSlots_[i]);
     }
-    GLint texLoc = glGetUniformLocation(shader_.id(), "uTex");
-    if (texLoc >= 0) glUniform1i(texLoc, 0);
+    GLint texLoc = glGetUniformLocation(shader_.id(), "uTex[0]");
+    if (texLoc >= 0) {
+        GLint units[MaxTextureSlots];
+        for (int i = 0; i < MaxTextureSlots; ++i) units[i] = i;
+        glUniform1iv(texLoc, MaxTextureSlots, units);
+    }
 
     // draw only the used indices
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(spriteCount_ * 6), GL_UNSIGNED_SHORT, 0);

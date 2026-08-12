@@ -1,7 +1,9 @@
 #include "../include/Engine.h"
 #include "../include/GLContext.h"
+#ifdef ANDROID
 #include <android/log.h>
 #include <android_native_app_glue.h>
+#endif
 #include <thread>
 #include <chrono>
 #include <EGL/egl.h>
@@ -34,6 +36,7 @@ struct Engine::Impl {
     Impl(android_app* a): app(a) {}
 };
 
+#ifdef ANDROID
 static void onAppCmd(struct android_app* app, int32_t cmd) {
     Engine* engine = reinterpret_cast<Engine*>(app->userData);
     if (engine) engine->handleCmd(cmd);
@@ -44,12 +47,15 @@ static int32_t onInputEvent(struct android_app* app, AInputEvent* event) {
     if (engine) return engine->handleInput(event);
     return 0;
 }
+#endif
 
 Engine::Engine(android_app* app)
     : impl_(new Impl(app)) {
+#ifdef ANDROID
     app->userData = this;
     app->onAppCmd = onAppCmd;
     app->onInputEvent = onInputEvent;
+#endif
     renderer_ = std::make_unique<future2d::Renderer>();
 }
 
@@ -60,11 +66,14 @@ PhysicsWorld* Engine::physics() { return impl_ ? impl_->physics.get() : nullptr;
 Engine::~Engine() = default;
 
 void Engine::init() {
+#ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "Future2D", "Engine init");
+#endif
     impl_->running = true;
 }
 
 void Engine::handleCmd(int32_t cmd) {
+#ifdef ANDROID
     switch (cmd) {
         case APP_CMD_INIT_WINDOW:
             if (impl_->app->window) {
@@ -73,16 +82,25 @@ void Engine::handleCmd(int32_t cmd) {
                     impl_->hasWindow = true;
                     // initialize renderer with asset manager and surface size
                     AAssetManager* mgr = impl_->app->activity->assetManager;
-                    if (renderer_) renderer_->init(mgr, impl_->gl->width(), impl_->gl->height());
+                    bool ok = false;
+                    if (renderer_) ok = renderer_->init(mgr, impl_->gl->width(), impl_->gl->height());
+                    if (ok) {
                         // create physics world
                         impl_->physics = std::make_unique<PhysicsWorld>();
                         if (impl_->physics) impl_->physics->setDebugRenderer(renderer_.get());
                         // create Lua VM and register physics bindings
                         impl_->lua = std::make_unique<LuaVM>();
                         if (impl_->lua) impl_->lua->init(impl_->physics.get());
-                    // create asset loader and kick off demo image load
-                    impl_->loader = std::make_unique<AssetLoader>(mgr, 2);
-                    impl_->imageFuture = impl_->loader->loadImageAsync("textures/demo.png");
+                        // create asset loader and kick off demo image load
+                        impl_->loader = std::make_unique<AssetLoader>(mgr, 2);
+                        impl_->imageFuture = impl_->loader->loadImageAsync("textures/demo.png");
+                    } else {
+#ifdef ANDROID
+                        __android_log_print(ANDROID_LOG_ERROR, "Future2D", "Renderer init failed");
+#else
+                        std::fprintf(stderr, "Future2D: Renderer init failed\n");
+#endif
+                    }
                 }
             }
             break;
@@ -109,9 +127,13 @@ void Engine::handleCmd(int32_t cmd) {
         default:
             break;
     }
+#else
+    (void)cmd;
+#endif
 }
 
 int32_t Engine::handleInput(AInputEvent* event) {
+#ifdef ANDROID
     // Basic touch handling scaffold
     int type = AInputEvent_getType(event);
     if (type == AINPUT_EVENT_TYPE_MOTION) {
@@ -123,9 +145,14 @@ int32_t Engine::handleInput(AInputEvent* event) {
         return 0; // not handled by default
     }
     return 0;
+#else
+    (void)event;
+    return 0;
+#endif
 }
 
 void Engine::run() {
+#ifdef ANDROID
     init();
     using clock = std::chrono::steady_clock;
     auto previous = clock::now();
@@ -230,6 +257,37 @@ void Engine::run() {
             std::this_thread::sleep_for(10ms);
         }
     }
+#else
+    init();
+    using clock = std::chrono::steady_clock;
+    auto previous = clock::now();
+    double accumulator = 0.0;
+
+    while (impl_->running) {
+        if (impl_->paused) {
+            std::this_thread::sleep_for(50ms);
+            continue;
+        }
+
+        auto now = clock::now();
+        std::chrono::duration<double> frameTime = now - previous;
+        previous = now;
+        double dt = frameTime.count();
+        if (dt > impl_->maxFrameTime) dt = impl_->maxFrameTime;
+        accumulator += dt;
+
+        while (accumulator >= impl_->fixedDt) {
+            if (onFixedUpdate) onFixedUpdate(static_cast<float>(impl_->fixedDt));
+            if (impl_->physics) impl_->physics->step(static_cast<float>(impl_->fixedDt));
+            accumulator -= impl_->fixedDt;
+        }
+
+        if (onUpdate) onUpdate(static_cast<float>(dt));
+        if (impl_->lua) impl_->lua->callOnUpdate(static_cast<float>(dt));
+        if (onRender) onRender();
+        std::this_thread::sleep_for(16ms);
+    }
+#endif
 }
 
 void Engine::requestExit() {

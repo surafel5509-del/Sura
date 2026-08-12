@@ -1,5 +1,9 @@
 #include "../include/Texture.h"
+#ifdef ANDROID
 #include <android/log.h>
+#else
+#include <cstdio>
+#endif
 
 Texture::Texture() {}
 

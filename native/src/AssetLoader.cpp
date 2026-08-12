@@ -1,7 +1,11 @@
 #include "../include/AssetLoader.h"
+#ifdef ANDROID
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#else
+#include <cstdio>
+#endif
 #include <sys/stat.h>
 #include <fstream>
 
@@ -23,6 +27,7 @@ std::future<std::shared_ptr<std::vector<uint8_t>>> AssetLoader::loadFileAsync(co
 
     return pool_.submit([this, path]() -> std::shared_ptr<std::vector<uint8_t>> {
         std::shared_ptr<std::vector<uint8_t>> data = std::make_shared<std::vector<uint8_t>>();
+#ifdef ANDROID
         if (mgr_) {
             AAsset* asset = AAssetManager_open(mgr_, path.c_str(), AASSET_MODE_BUFFER);
             if (asset) {
@@ -35,6 +40,7 @@ std::future<std::shared_ptr<std::vector<uint8_t>>> AssetLoader::loadFileAsync(co
                 return data;
             }
         }
+#endif
 
         // fallback to filesystem
         std::ifstream ifs(path, std::ios::binary | std::ios::ate);
@@ -57,7 +63,11 @@ std::future<std::shared_ptr<ImageAsset>> AssetLoader::loadImageAsync(const std::
         int w = 0, h = 0, channels = 0;
         unsigned char* decoded = stbi_load_from_memory(fileData->data(), static_cast<int>(fileData->size()), &w, &h, &channels, 4);
         if (!decoded) {
+#ifdef ANDROID
             __android_log_print(ANDROID_LOG_ERROR, "Future2D", "stb_image failed to decode %s", path.c_str());
+#else
+            std::fprintf(stderr, "Future2D: stb_image failed to decode %s\n", path.c_str());
+#endif
             return nullptr;
         }
         size_t datasz = static_cast<size_t>(w) * static_cast<size_t>(h) * 4;
@@ -72,6 +82,6 @@ std::future<std::shared_ptr<ImageAsset>> AssetLoader::loadImageAsync(const std::
 }
 
 void AssetLoader::setCacheCapacity(size_t items) {
-    // simplistic: recreate cache
-    cache_ = LRUCache<std::string, std::shared_ptr<std::vector<uint8_t>>>(items);
+    // simplistic: reset cache capacity without invoking deleted assignment
+    cache_.reset(items);
 }

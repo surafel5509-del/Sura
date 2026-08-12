@@ -4,8 +4,7 @@ project(future2d-native LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(future2d SHARED
-    src/android_main.cpp
+set(NATIVE_SOURCES
     src/Engine.cpp
     src/GLContext.cpp
     src/ThreadPool.cpp
@@ -18,6 +17,12 @@ add_library(future2d SHARED
     src/TextureAtlas.cpp
     src/ResourceManager.cpp
 )
+
+if(ANDROID)
+    list(APPEND NATIVE_SOURCES src/android_main.cpp)
+endif()
+
+add_library(future2d SHARED ${NATIVE_SOURCES})
 
 target_include_directories(future2d PRIVATE include)
 

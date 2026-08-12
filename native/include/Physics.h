@@ -5,6 +5,8 @@
 
 namespace future2d {
 
+class Renderer;
+
 struct PhysicsConfig {
     float gravityX = 0.0f;
     float gravityY = 9.8f;
@@ -26,7 +28,7 @@ public:
     // Debug draw callback (if enabled) will call the provided function with vertex lists
     void setDebugDrawCallback(std::function<void()> cb);
     // Attach a renderer for debug drawing (optional)
-    void setDebugRenderer(class future2d::Renderer* r);
+    void setDebugRenderer(Renderer* r);
 
     // Query body transforms
     std::pair<float,float> getBodyPosition(int bodyId) const;
