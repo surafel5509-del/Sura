@@ -26,6 +26,9 @@ jobs:
   build:
     name: Build & Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -73,16 +76,62 @@ jobs:
           echo "SDK: $ANDROID_SDK_ROOT"
 
       - name: Run unit tests
+        id: unit_tests
+        continue-on-error: true
         working-directory: android
-        run: gradle :app:testDebugUnitTest --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle :app:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-unit.log | tail -60
 
       - name: Build debug APK
+        id: build_debug
+        continue-on-error: true
         working-directory: android
-        run: gradle :app:assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-debug.log | tail -60
 
       - name: Build release APK (unsigned)
+        id: build_release
+        continue-on-error: true
         working-directory: android
-        run: gradle :app:assembleRelease --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-release.log | tail -60
+
+      - name: Publish build diagnostics
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "### Sura Engine build diagnostics"
+            echo ""
+            for f in /tmp/gradle-unit.log /tmp/gradle-debug.log /tmp/gradle-release.log; do
+              if [ ! -f "$f" ]; then continue; fi
+              echo "#### $(basename "$f")"
+              echo '```'
+              grep -E "^(e: |error: |FAILURE:|> Task .* FAILED)" "$f" | head -80 || true
+              echo '--- tail ---'
+              tail -40 "$f"
+              echo '```'
+            done
+          } > /tmp/diagnostics.md
+          head -c 60000 /tmp/diagnostics.md > /tmp/diagnostics-trimmed.md
+          gh api -X POST "repos/$REPO/commits/$SHA/comments" -F body=@/tmp/diagnostics-trimmed.md > /dev/null 2>&1 || echo "diagnostics comment skipped"
+          grep -E "^(e: |error: )" /tmp/gradle-unit.log 2>/dev/null | head -10 | while IFS= read -r line; do
+            echo "::error::$line"
+          done || true
+
+      - name: Verify build result
+        if: always()
+        run: |
+          if [ "${{ steps.unit_tests.outcome }}" != "success" ] || [ "${{ steps.build_debug.outcome }}" != "success" ]; then
+            echo "Build or tests failed - see the commit comment 'Sura Engine build diagnostics' for details."
+            exit 1
+          fi
 
       - name: Collect build outputs
         if: always()

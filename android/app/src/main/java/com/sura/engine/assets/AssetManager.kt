@@ -25,6 +25,17 @@ class AssetManager(private val context: Context) : EngineService {
         }
     }
     fun getTexture(path: String): Texture? = textures[path]
+
+    /** Decodes a bitmap from the asset folder without caching it as a Texture. */
+    fun openBitmap(path: String): Bitmap? = try {
+        context.assets.open(path).use { BitmapFactory.decodeStream(it) }
+    } catch (e: IOException) { null }
+
+    /** Decodes a bitmap from an absolute file path (used by the runtime player). */
+    fun openBitmapFile(absolutePath: String): Bitmap? = try {
+        BitmapFactory.decodeFile(absolutePath)
+    } catch (e: Throwable) { null }
+
     fun loadBytes(path: String): ByteArray? {
         bytes[path]?.let { return it }
         return try {
