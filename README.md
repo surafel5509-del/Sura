@@ -54,8 +54,8 @@ Everything is 100% offline: the engine never asks for the internet, an account o
 
 ### Option A — install the ready-made APK (no PC needed)
 
-1. Open **[Releases → v1.0.0](https://github.com/surafel5509-del/Sura/releases/latest)**.
-2. Download **`app-debug.apk`** (installs on any Android 5.0+ device) or the release build.
+1. Open **[Releases → latest](https://github.com/surafel5509-del/Sura/releases/latest)** (currently **v1.1.0**).
+2. Download **`app-debug.apk`** (installs on any Android 5.0+ device) or `app-release-unsigned.apk` if you sign it yourself.
 3. Install it (allow "install unknown apps" if Android asks).
 4. Launch **Sura Engine** — it opens in landscape with a demo platformer already loaded.
 
