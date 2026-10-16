@@ -62,6 +62,33 @@ class EditorActivity : AppCompatActivity() {
         }.also { it.start() }
     }
 
+    /** Physical keyboard support: Ctrl+Z/S/P/B/G like a desktop engine editor. */
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (event != null && event.isCtrlPressed) {
+            when (keyCode) {
+                android.view.KeyEvent.KEYCODE_Z -> {
+                    if (event.isShiftPressed) screen.redo() else screen.undo()
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_Y -> { screen.redo(); return true }
+                android.view.KeyEvent.KEYCODE_S -> {
+                    if (event.isShiftPressed) screen.saveProjectNow() else screen.saveSceneNow()
+                    return true
+                }
+                android.view.KeyEvent.KEYCODE_P -> { screen.togglePlay(); return true }
+                android.view.KeyEvent.KEYCODE_B -> { screen.openBuildDialog(); return true }
+                android.view.KeyEvent.KEYCODE_G -> { screen.toggleGridNow(); return true }
+                android.view.KeyEvent.KEYCODE_PERIOD -> { screen.stopPlay(); return true }
+                android.view.KeyEvent.KEYCODE_H -> { screen.toggleStatsNow(); return true }
+            }
+        }
+        if (keyCode == android.view.KeyEvent.KEYCODE_SPACE) {
+            screen.togglePlay()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
     override fun onResume() {
         super.onResume()
         Engine.get().resume()

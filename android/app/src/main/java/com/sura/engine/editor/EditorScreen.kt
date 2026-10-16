@@ -444,6 +444,31 @@ class EditorScreen(context: Context) : LinearLayout(context) {
         return "$base $index"
     }
 
+    // ---------------------------------------------------------------- public actions (keyboard / automation)
+
+    fun undo() { state.undoStack.undo(); state.notifyChanged() }
+    fun redo() { state.undoStack.redo(); state.notifyChanged() }
+    fun saveSceneNow() = saveScene()
+    fun saveProjectNow() {
+        val project = state.project ?: return
+        projectManager.saveProject(project)
+        state.log("Project saved")
+    }
+    fun togglePlay() { if (state.isPlaying) exitPlayMode() else enterPlayMode() }
+    fun togglePause() { state.isPaused = !state.isPaused; state.notifyChanged() }
+    fun stopPlay() = exitPlayMode()
+    fun openBuildDialog() = showBuildDialog()
+    fun toggleGridNow() {
+        state.showGrid = !state.showGrid
+        engineView.showGrid = state.showGrid
+        state.notifyChanged()
+    }
+    fun toggleStatsNow() {
+        state.showStats = !state.showStats
+        engineView.showStats = state.showStats
+        state.notifyChanged()
+    }
+
     fun consoleView(): ConsoleView = console
     fun engineSurface(): EngineView = engineView
     

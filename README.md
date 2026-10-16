@@ -25,11 +25,12 @@ It ships with everything you expect from a modern engine:
 | Subsystem | What you get |
 |-----------|--------------|
 | **Editor** | Landscape IDE: menu bar, tool palette, Hierarchy, Inspector, Asset browser, Console, Profiler, Scene view with grid/gizmos |
-| **Renderer** | Hardware OpenGL ES 2.0 renderer with sprite batching **and** a Canvas fallback renderer that runs on every device |
+| **Renderer** | Hardware OpenGL ES 2.0 renderer with sprite batching (up to 4096 quads/draw call) **and** a Canvas fallback renderer that runs on every device; per-project renderer choice |
 | **Scenes** | Scene graph with parenting, tags, layers, depth sorting, prefabs, instantiation, serialization to `.scene` JSON |
 | **Physics** | Custom 2D solver: rigid bodies (static/kinematic/dynamic), box & circle colliders, friction, restitution, triggers, collision events, raycasts, AABB queries |
 | **Scripting** | **SuraScript** — an embedded scripting VM (lexer → parser → interpreter) with functions, loops, recursion, strings, and a full engine API |
-| **Animation** | Keyframe clips, animators, easing library, tween manager, coroutine-style timers |
+| **Animation** | Keyframe clips, frame based sprite animation, sprite sheets, easing library, tween manager, coroutine-style timers |
+| **Textures** | Offline atlas packer (grows to power-of-two atlases, reports unpacked sprites), runtime font atlas |
 | **Particles** | GPU-friendly particle systems with emission shapes, gravity, colour/size interpolation |
 | **Tilemaps** | Multi-layer tilemaps, tile painting in the editor, tile collision helper for platformers, tilemap serialization |
 | **AI** | A* grid navigation with weighted cells and diagonal movement |
@@ -37,7 +38,7 @@ It ships with everything you expect from a modern engine:
 | **Audio** | SoundPool-based SFX manager + streaming music player, volume buses |
 | **Input** | Multi-touch manager, virtual joystick, gesture pan/zoom, key events |
 | **UI** | Retained-mode UI toolkit: panels, buttons, labels, text fields, sliders, toggles, dropdowns, progress bars, layout groups |
-| **Tools** | Profiler (FPS graph, frame ms, draw calls, memory), console with 20+ commands, undo/redo stack, project manager, build manager |
+| **Tools** | Profiler (FPS graph, frame ms, draw calls, memory), console with 20+ commands, undo/redo stack, scene manager, prefab tools, autosave, project manager, build manager |
 | **Assets** | Offline asset pipeline: texture loading, bitmap font atlas generated at runtime, asset browser |
 | **Saves** | Slot-based save system, project settings, localisation tables |
 
@@ -223,7 +224,8 @@ sceneManager.loadScene(scene)
 
 More: **[docs/architecture.md](docs/architecture.md)**, **[docs/editor.md](docs/editor.md)**,
 **[docs/scripting.md](docs/scripting.md)**, **[docs/building.md](docs/building.md)**,
-**[docs/api.md](docs/api.md)**.
+**[docs/api.md](docs/api.md)**, **[docs/tutorial.md](docs/tutorial.md)** and
+ready-to-use scripts in **[samples/scripts](samples/scripts)**.
 
 ---
 
@@ -237,8 +239,8 @@ More: **[docs/architecture.md](docs/architecture.md)**, **[docs/editor.md](docs/
 * [x] Tilemaps, lights, particles, animation, A* navigation
 * [x] Scene serialization, projects, prefabs, save slots
 * [x] CI that publishes signed-ready APKs
-* [ ] Tilemap autotiling + rule tiles
-* [ ] Sprite atlas packer
+* [x] Tilemap autotiling (16-entry neighbour masks)
+* [x] Sprite atlas packer
 * [ ] Audio mixer bus editor
 * [ ] Multiplayer sandbox (LAN, offline-first)
 
@@ -247,6 +249,18 @@ More: **[docs/architecture.md](docs/architecture.md)**, **[docs/editor.md](docs/
 ## Contributing
 
 See **[CONTRIBUTING.md](CONTRIBUTING.md)**. Bug reports and feature requests are welcome via GitHub Issues.
+
+## Keyboard shortcuts (physical keyboard / Chromebook / DeX)
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / Redo |
+| `Ctrl+S` | Save scene |
+| `Ctrl+Shift+S` | Save project |
+| `Ctrl+P` / `Space` | Play or Pause |
+| `Ctrl+.` | Stop |
+| `Ctrl+B` | Build dialog |
+| `Ctrl+G` | Toggle grid |
 
 ## License
 
