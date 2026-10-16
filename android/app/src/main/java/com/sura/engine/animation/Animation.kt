@@ -56,11 +56,23 @@ class Tween(var from: Float, var to: Float, var duration: Float, val onUpdate: (
     var easing: (Float) -> Float = { t -> Easing.easeInOutQuad(t) }
     var isComplete = false
     fun update(dt: Float) {
-        if (isComplete) return
+        if (isComplete || duration <= 0f) {
+            if (!isComplete && duration <= 0f) {
+                onUpdate(to)
+                isComplete = true
+                onComplete?.invoke()
+            }
+            return
+        }
         elapsed += dt
-        val t = (elapsed / duration).coerceIn(0f,1f)
+        val raw = elapsed / duration
+        val t = raw.coerceIn(0f, 1f)
         onUpdate(from + (to - from) * easing(t))
-        if (t >= 1f) { isComplete = true; onComplete?.invoke() }
+        if (raw >= 1f - 0.00001f) {
+            onUpdate(to)
+            isComplete = true
+            onComplete?.invoke()
+        }
     }
 }
 

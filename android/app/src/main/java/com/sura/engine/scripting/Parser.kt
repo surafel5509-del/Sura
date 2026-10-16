@@ -87,15 +87,16 @@ class Parser(private val tokens: List<Token>) {
 
     private fun forStatement(): Stmt {
         consumeKeyword("for")
-        consumeType(TokenType.LPAREN, "expect '(' after for")
+        // both `for i in 1..10 { }` and `for (i in 1..10) { }` are accepted
+        val parenthesised = matchType(TokenType.LPAREN)
         val variable = consumeType(TokenType.IDENT, "expect loop variable").text
         consumeKeyword("in")
         val from = expression()
         if (!matchOp("..") && !matchOp("..=") && !matchOp("...")) {
-            throw ScriptException("expect '..' range operator in for loop", peek().line)
+            throw ScriptException("expect '..' range operator in for loop (for i in 1..10)", peek().line)
         }
         val to = expression()
-        consumeType(TokenType.RPAREN, "expect ')' after range")
+        if (parenthesised) consumeType(TokenType.RPAREN, "expect ')' after range")
         return Stmt.ForRange(variable, from, to, statement())
     }
 
