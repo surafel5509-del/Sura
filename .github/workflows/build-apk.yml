@@ -113,9 +113,11 @@ jobs:
               if [ ! -f "$f" ]; then continue; fi
               echo "#### $(basename "$f")"
               echo '```'
-              grep -E "^(e: |error: |FAILURE:|> Task .* FAILED)" "$f" | head -80 || true
+              grep -E "^(e: |error: |FAILURE:|> Task .* FAILED|Caused by:|\* Try:|Execution failed|A problem occurred)" "$f" | head -80 || true
+              echo '--- what went wrong ---'
+              grep -A 12 "What went wrong" "$f" | head -40 || true
               echo '--- tail ---'
-              tail -40 "$f"
+              tail -25 "$f"
               echo '```'
             done
           } > /tmp/diagnostics.md
