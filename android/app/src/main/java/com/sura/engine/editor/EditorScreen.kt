@@ -65,6 +65,9 @@ class EditorScreen(context: Context) : LinearLayout(context) {
         override fun onOpenProject(name: String) = loadProject(name)
         override fun onNewProject(name: String) = loadProject(name)
         override fun onExit() = Dialogs.alert(context, "Sura Engine", "Press the back key or the recent apps button to leave the editor.\nYour project is saved automatically.")
+        override fun onSavePrefab() = saveSelectionAsPrefab()
+        override fun onScenes() = showSceneManager()
+        override fun onProjectSettings() = showProjectSettings()
     }
 
     init {
@@ -308,15 +311,137 @@ class EditorScreen(context: Context) : LinearLayout(context) {
         state.profiler.drawCalls = state.scene?.allObjects?.size ?: 0
     }
 
-    /** Called by the activity each frame tick to refresh live panels. */
-    fun onTick() {
+    private var autoSaveAccumulator = 0f
+
+    /** Called by the activity on a timer to refresh live panels and trigger autosave. */
+    fun onTick(deltaSeconds: Float = 0.25f) {
         if (bottomTab == 1) stats.update()
-        if (state.isPlaying) { /* engine view drives the simulation */ }
+        val project = state.project ?: return
+        val interval = project.settings.autosaveSeconds
+        if (interval <= 0) return
+        autoSaveAccumulator += deltaSeconds
+        if (autoSaveAccumulator >= interval) {
+            autoSaveAccumulator = 0f
+            if (state.isDirty && !state.isPlaying) {
+                val scene = state.scene
+                if (scene != null) {
+                    val json = SceneSerializer().serialize(scene)
+                    project.writeText("Scenes/Autosave.scene", json)
+                    state.log("Autosaved '${scene.name}' -> Scenes/Autosave.scene")
+                    state.isDirty = false
+                }
+            }
+        }
+    }
+
+    /** Stores the current selection as a reusable prefab in the project folder. */
+    private fun saveSelectionAsPrefab() {
+        val go = state.selection ?: return run { state.log("Select an object first", EditorState.ConsoleLine.Level.WARN) }
+        val project = state.project ?: return run { state.log("No project open", EditorState.ConsoleLine.Level.WARN) }
+        Dialogs.prompt(context, "Prefab name", go.name) { name ->
+            if (name.isBlank()) return@prompt
+            val json = com.sura.engine.serialization.Json.stringify(
+                SceneSerializer().serializeObject(go), true
+            )
+            val ok = projectManager.savePrefab(project, name, json)
+            state.log(if (ok) "Prefab '$name' saved (${go.components.size} components)" else "Could not save prefab",
+                if (ok) EditorState.ConsoleLine.Level.INFO else EditorState.ConsoleLine.Level.ERROR)
+        }
+    }
+
+    /** Scene browser: open, duplicate, create and delete project scenes. */
+    private fun showSceneManager() {
+        val project = state.project ?: return run { state.log("No project open", EditorState.ConsoleLine.Level.WARN) }
+        val scenes = projectManager.listScenes(project).toMutableList()
+        val options = mutableListOf<String>()
+        options.addAll(scenes.map { "Open: $it" })
+        options.add("Create new scene")
+        scenes.forEach { options.add("Duplicate: $it") }
+        scenes.forEach { options.add("Delete: $it") }
+        Dialogs.choose(context, "Scenes", options) { index ->
+            val choice = options[index]
+            when {
+                choice.startsWith("Open: ") -> {
+                    val name = choice.removePrefix("Open: ")
+                    val scene = projectManager.loadScene(project, name)
+                    if (scene == null) {
+                        state.log("Could not open '$name'", EditorState.ConsoleLine.Level.ERROR)
+                    } else {
+                        state.scene = scene
+                        engineView.scene = scene
+                        sceneManager.loadScene(scene)
+                        state.select(null)
+                        state.log("Scene '$name' loaded (${scene.allObjects.size} objects)")
+                    }
+                }
+                choice.startsWith("Duplicate: ") -> {
+                    val source = choice.removePrefix("Duplicate: ")
+                    val scene = projectManager.loadScene(project, source)
+                    if (scene != null) {
+                        scene.name = uniqueSceneName(project, source)
+                        projectManager.saveScene(project, scene)
+                        state.log("Duplicated '$source' -> '${scene.name}'")
+                    }
+                }
+                choice.startsWith("Delete: ") -> {
+                    val name = choice.removePrefix("Delete: ")
+                    Dialogs.confirm(context, "Delete scene", "Delete '$name' permanently?") {
+                        project.delete("Scenes/$name.scene")
+                        state.log("Deleted scene '$name'")
+                    }
+                }
+                else -> {
+                    Dialogs.prompt(context, "New scene name", "Level") { name ->
+                        if (name.isBlank()) return@prompt
+                        val scene = Scene(name)
+                        val camera = scene.createGameObject("Main Camera")
+                        camera.addComponent(com.sura.engine.rendering.CameraComponent())
+                        projectManager.saveScene(project, scene)
+                        state.scene = scene
+                        engineView.scene = scene
+                        sceneManager.loadScene(scene)
+                        state.log("Scene '$name' created")
+                    }
+                }
+            }
+        }
+    }
+
+    /** Edits the exported game's identity and runtime settings. */
+    private fun showProjectSettings() {
+        val project = state.project ?: return run { state.log("No project open", EditorState.ConsoleLine.Level.WARN) }
+        val settings = project.settings
+        Dialogs.prompt(context, "App name", settings.appName) { appName ->
+            settings.appName = appName.ifBlank { settings.appName }
+            Dialogs.prompt(context, "Package id", settings.packageName) { packageName ->
+                settings.packageName = packageName.ifBlank { settings.packageName }
+                Dialogs.prompt(context, "Version name", settings.versionName) { version ->
+                    settings.versionName = version.ifBlank { settings.versionName }
+                    Dialogs.prompt(context, "Gravity Y (e.g. -9.81)", settings.physicsGravityY.toString(), numeric = true) { gravity ->
+                        gravity.toFloatOrNull()?.let { settings.physicsGravityY = it }
+                        Dialogs.choose(context, "Renderer backend", listOf("canvas", "opengl")) { index ->
+                            settings.rendererBackend = if (index == 0) "canvas" else "opengl"
+                            projectManager.saveProject(project)
+                            state.log("Project settings saved (${settings.appName}, ${settings.packageName}, ${settings.rendererBackend})")
+                            state.notifyChanged()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun shutdown() {
         projectManager.saveProject(state.project ?: return)
         saveScene()
+    }
+
+    private fun uniqueSceneName(project: Project, base: String): String {
+        val existing = projectManager.listScenes(project).toSet()
+        if (!existing.contains(base)) return base
+        var index = 1
+        while (existing.contains("$base $index")) index++
+        return "$base $index"
     }
 
     fun consoleView(): ConsoleView = console

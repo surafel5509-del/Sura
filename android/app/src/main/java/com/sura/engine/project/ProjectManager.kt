@@ -138,6 +138,10 @@ class ProjectManager(private val platform: Platform) {
             value("companyName")?.let { settings.companyName = it }
             value("startScene")?.let { settings.startScene = it }
             value("gravity")?.let { settings.physicsGravityY = it.toFloatOrNull() ?: -9.81f }
+            value("rendererBackend")?.let { settings.rendererBackend = it }
+            value("targetFps")?.let { settings.targetFps = it.toIntOrNull() ?: 60 }
+            value("autosaveSeconds")?.let { settings.autosaveSeconds = it.toIntOrNull() ?: 60 }
+            value("gridSize")?.let { settings.gridSize = it.toFloatOrNull() ?: 32f }
         } catch (t: Throwable) {
             Logger.w("Could not parse project settings: ${t.message}")
         }

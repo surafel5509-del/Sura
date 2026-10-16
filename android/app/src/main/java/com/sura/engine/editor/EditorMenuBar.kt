@@ -29,6 +29,9 @@ class EditorMenuBar(context: Context, private val state: EditorState, private va
         fun onOpenProject(name: String)
         fun onNewProject(name: String)
         fun onExit()
+        fun onSavePrefab()
+        fun onScenes()
+        fun onProjectSettings()
     }
 
     init {
@@ -44,6 +47,8 @@ class EditorMenuBar(context: Context, private val state: EditorState, private va
             menu.menu.add("Open project").setOnMenuItemClickListener { onOpenProject(); true }
             menu.menu.add("Save project").setOnMenuItemClickListener { callbacks.onSaveProject(); true }
             menu.menu.add("Save scene").setOnMenuItemClickListener { callbacks.onSaveScene(); true }
+            menu.menu.add("Scenes...").setOnMenuItemClickListener { callbacks.onScenes(); true }
+            menu.menu.add("Project settings").setOnMenuItemClickListener { callbacks.onProjectSettings(); true }
             menu.menu.add("Load demo").setOnMenuItemClickListener { onLoadDemo(); true }
             menu.menu.add("Exit editor").setOnMenuItemClickListener { callbacks.onExit(); true }
         })
@@ -93,6 +98,7 @@ class EditorMenuBar(context: Context, private val state: EditorState, private va
             menu.menu.add("UI Canvas").setOnMenuItemClickListener { createWith("UI Canvas") { go ->
                 go.addComponent(com.sura.engine.ui.UIElementHolder())
             }; true }
+            menu.menu.add("Save selection as prefab").setOnMenuItemClickListener { callbacks.onSavePrefab(); true }
         })
         addView(menu("Play") { menu ->
             menu.menu.add("Play").setOnMenuItemClickListener { callbacks.onPlay(); true }

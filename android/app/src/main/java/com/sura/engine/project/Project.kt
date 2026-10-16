@@ -20,6 +20,11 @@ class ProjectSettings {
     var fixedTimestep: Float = 1f / 60f
     var startScene: String = "MainScene"
     var showStats: Boolean = true
+    var rendererBackend: String = "canvas"
+    var targetFps: Int = 60
+    var autosaveSeconds: Int = 60
+    var showCollidersOnStart: Boolean = false
+    var gridSize: Float = 32f
 
     fun toMap(): Map<String, Any> = mapOf(
         "appName" to appName,
@@ -34,7 +39,11 @@ class ProjectSettings {
         "gravity" to physicsGravityY,
         "fixedTimestep" to fixedTimestep,
         "startScene" to startScene,
-        "showStats" to showStats
+        "showStats" to showStats,
+        "rendererBackend" to rendererBackend,
+        "targetFps" to targetFps,
+        "autosaveSeconds" to autosaveSeconds,
+        "gridSize" to gridSize
     )
 }
 
