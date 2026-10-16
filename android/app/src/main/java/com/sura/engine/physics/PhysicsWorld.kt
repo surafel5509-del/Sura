@@ -172,8 +172,8 @@ class PhysicsWorld : EngineService {
             var t2 = (rect.x + rect.w - origin.x) / dirX
             var sign = -1f
             if (t1 > t2) { val tmp = t1; t1 = t2; t2 = tmp; sign = 1f }
-            tMin = max(tMin, t1)
             if (t1 > tMin) { normalX = sign; normalY = 0f }
+            tMin = max(tMin, t1)
             tMax = min(tMax, t2)
             if (tMin > tMax) return null
         }

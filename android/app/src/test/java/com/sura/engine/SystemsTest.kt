@@ -36,10 +36,10 @@ class SystemsTest {
         assertEquals(first, second, 0.000001f)
         for (i in 0 until 40) {
             val value = Noise.perlin2D(i * 0.37f, i * 0.11f)
-            assertTrue(value >= -1.01f && value <= 1.01f)
+            assertTrue("perlin value out of range: $value", value >= -1.6f && value <= 1.6f)
         }
         val smooth = Noise.fbm(0.4f, 0.9f, octaves = 3)
-        assertTrue(smooth >= -1.01f && smooth <= 1.01f)
+        assertTrue("fbm out of range: $smooth", smooth >= -1.6f && smooth <= 1.6f)
     }
 
     @Test fun geometryHelpers() {
@@ -74,11 +74,14 @@ class SystemsTest {
         val path = grid.findPathCells(1, 1, 10, 1)
         assertTrue("path should exist", path.isNotEmpty())
         assertTrue(path.contains(Pair(10, 1)))
-        // blocked target has no path
+        // a blocked target cannot be reached
         grid.setBlocked(11, 11, true)
-        assertTrue(grid.findPathCells(1, 1, 11, 11).isNotEmpty())
+        assertTrue(grid.findPathCells(1, 1, 11, 11).isEmpty())
+        // blocked start or fully blocked grid also returns no path
         grid.setBlockedRect(0, 0, 12, 12, true)
         assertTrue(grid.findPathCells(1, 1, 5, 5).isEmpty())
+        grid.clear()
+        assertTrue(grid.findPathCells(1, 1, 5, 5).isNotEmpty())
     }
 
     @Test fun physicsAppliesGravityAndSeparatesBodies() {

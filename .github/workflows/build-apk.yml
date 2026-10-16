@@ -121,6 +121,16 @@ jobs:
               echo '```'
             done
           } > /tmp/diagnostics.md
+          echo "" >> /tmp/diagnostics.md
+          echo "#### failing tests" >> /tmp/diagnostics.md
+          echo '```' >> /tmp/diagnostics.md
+          for f in android/app/build/test-results/testDebugUnitTest/*.xml; do
+            if [ -f "$f" ]; then
+              grep -o '<testcase name="[^"]*" classname="[^"]*"' "$f" | head -40 >> /tmp/diagnostics.md || true
+              grep -A 4 '<failure' "$f" | head -60 >> /tmp/diagnostics.md || true
+            fi
+          done
+          echo '```' >> /tmp/diagnostics.md
           head -c 60000 /tmp/diagnostics.md > /tmp/diagnostics-trimmed.md
           gh api -X POST "repos/$REPO/commits/$SHA/comments" -F body=@/tmp/diagnostics-trimmed.md > /dev/null 2>&1 || echo "diagnostics comment skipped"
           grep -E "^(e: |error: )" /tmp/gradle-unit.log 2>/dev/null | head -10 | while IFS= read -r line; do
