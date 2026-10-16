@@ -43,6 +43,13 @@ class EditorScreen(context: Context) : LinearLayout(context) {
     private val bottomTabs = LinearLayout(context)
     private var leftTab = 0
     private var bottomTab = 0
+    private lateinit var leftPanel: LinearLayout
+    private lateinit var rightPanel: LinearLayout
+    private val compactLayout: Boolean
+        get() = resources.configuration.screenWidthDp < 960
+    private val leftPanelDp: Int get() = if (compactLayout) 176 else EditorTheme.LEFT_PANEL_WIDTH_DP
+    private val rightPanelDp: Int get() = if (compactLayout) 218 else EditorTheme.RIGHT_PANEL_WIDTH_DP
+    private val consoleHeightDp: Int get() = if (compactLayout) 108 else EditorTheme.CONSOLE_HEIGHT_DP
     private var playSnapshot: String? = null
 
     private val projectManager = ProjectManager(Platform(Engine.get().context))
@@ -236,7 +243,8 @@ class EditorScreen(context: Context) : LinearLayout(context) {
 
         // left panel
         val left = LinearLayout(context).apply { orientation = VERTICAL }
-        left.layoutParams = LayoutParams(EditorTheme.dp(context, EditorTheme.LEFT_PANEL_WIDTH_DP), LayoutParams.MATCH_PARENT)
+        leftPanel = left
+        left.layoutParams = LayoutParams(EditorTheme.dp(context, leftPanelDp), LayoutParams.MATCH_PARENT)
         val leftTabs = LinearLayout(context).apply { orientation = HORIZONTAL }
         leftTabs.addView(tabButton("Hierarchy") { leftTab = 0; refreshPanels() }, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
         leftTabs.addView(tabButton("Assets") { leftTab = 1; refreshPanels() }, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
@@ -256,7 +264,11 @@ class EditorScreen(context: Context) : LinearLayout(context) {
         }
         centreTabs.addView(EditorTheme.label(context, "  Scene", 11.5f, EditorTheme.textDim), LayoutParams(EditorTheme.dp(context, 70), LayoutParams.WRAP_CONTENT))
         centreTabs.addView(EditorTheme.label(context, "| Game", 11.5f, EditorTheme.textDim), LayoutParams(EditorTheme.dp(context, 70), LayoutParams.WRAP_CONTENT))
-        centreTabs.addView(EditorTheme.label(context, "   pinch = zoom  -  two fingers = pan  -  drag = move  ", 10f, EditorTheme.textFaint), LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+        val hint = EditorTheme.label(context, if (compactLayout) "" else "   pinch = zoom  -  two fingers = pan  -  drag = move  ", 10f, EditorTheme.textFaint)
+        centreTabs.addView(hint, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+        centreTabs.addView(EditorTheme.button(context, "\u25E7") { toggleLeftPanel() })
+        centreTabs.addView(EditorTheme.button(context, "\u25E8") { toggleRightPanel() })
+        centreTabs.addView(EditorTheme.button(context, "\u25A4") { toggleConsole() })
         centre.addView(centreTabs)
         centre.addView(engineView, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f))
 
@@ -265,13 +277,14 @@ class EditorScreen(context: Context) : LinearLayout(context) {
         bottomBar.addView(tabButton("Profiler") { bottomTab = 1; refreshPanels() }, LayoutParams(EditorTheme.dp(context, 90), LayoutParams.WRAP_CONTENT))
         bottomTabs.addView(bottomBar, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
         centre.addView(bottomTabs)
-        bottomContainer.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, EditorTheme.dp(context, EditorTheme.CONSOLE_HEIGHT_DP))
+        bottomContainer.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, EditorTheme.dp(context, consoleHeightDp))
         centre.addView(bottomContainer)
         mainRow.addView(centre)
 
         // right: inspector
         val right = LinearLayout(context).apply { orientation = VERTICAL }
-        right.layoutParams = LayoutParams(EditorTheme.dp(context, EditorTheme.RIGHT_PANEL_WIDTH_DP), LayoutParams.MATCH_PARENT)
+        rightPanel = right
+        right.layoutParams = LayoutParams(EditorTheme.dp(context, rightPanelDp), LayoutParams.MATCH_PARENT)
         right.addView(inspector, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f))
         val actions = LinearLayout(context).apply { orientation = HORIZONTAL; setBackgroundColor(EditorTheme.panelAlt) }
         actions.addView(EditorTheme.button(context, "Duplicate") {
@@ -290,6 +303,20 @@ class EditorScreen(context: Context) : LinearLayout(context) {
         mainRow.addView(right)
 
         refreshPanels()
+    }
+
+    private fun toggleLeftPanel() {
+        leftPanel.visibility = if (leftPanel.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+    }
+
+    private fun toggleRightPanel() {
+        rightPanel.visibility = if (rightPanel.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+    }
+
+    private fun toggleConsole() {
+        val show = bottomContainer.visibility != View.VISIBLE
+        bottomContainer.visibility = if (show) View.VISIBLE else View.GONE
+        bottomTabs.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun tabButton(title: String, onTap: () -> Unit): TextView {
