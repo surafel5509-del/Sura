@@ -55,7 +55,7 @@ object EditorTheme {
         val b = Button(context)
         b.text = text
         b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-        b.setTextColor(text)
+        b.setTextColor(EditorTheme.text)
         b.isAllCaps = false
         b.background = toolbarButtonBackground(context)
         b.setPadding(dp(context, 10), 0, dp(context, 10), 0)

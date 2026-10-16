@@ -2,7 +2,7 @@ package com.sura.engine.scene
 
 import com.sura.engine.core.Logger
 
-class Scene(val name: String = "Untitled") {
+class Scene(var name: String = "Untitled") {
     val rootObjects = mutableListOf<GameObject>()
     val allObjects = mutableListOf<GameObject>()
     var isLoaded = false

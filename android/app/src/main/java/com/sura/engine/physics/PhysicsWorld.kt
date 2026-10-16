@@ -27,7 +27,7 @@ class PhysicsWorld : EngineService {
         }
     }
 
-    fun fixedUpdate(dt: Float) {
+    override fun fixedUpdate(dt: Float) {
         // integrate
         for (b in bodies) {
             if (b.bodyType != BodyType.DYNAMIC) continue

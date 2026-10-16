@@ -14,7 +14,7 @@ class Random(seed: Long = 0x9E3779B97F4A7C15uL.toLong()) {
 
     private fun splitmix(x: Long): Long {
         var z = x + 0x9E3779B97F4A7C15uL.toLong()
-        z = (z xor (z ushr 30)) * 0xBF58476D1CE4E5B9L
+        z = (z xor (z ushr 30)) * 0xBF58476D1CE4E5B9uL.toLong()
         z = (z xor (z ushr 27)) * 0x94D049BB133111EBuL.toLong()
         return z xor (z ushr 31)
     }

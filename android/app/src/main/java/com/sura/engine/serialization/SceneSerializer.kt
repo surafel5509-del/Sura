@@ -65,7 +65,7 @@ class SceneSerializer {
         return o
     }
 
-    private fun serializeComponent(component: Component): JsonValue.JObject? {
+    fun serializeComponent(component: Component): JsonValue.JObject? {
         val o = JsonValue.JObject()
         when (component) {
             is SpriteRenderer -> {

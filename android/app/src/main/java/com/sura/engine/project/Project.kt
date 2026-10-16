@@ -43,7 +43,7 @@ class ProjectAsset(val path: String, val name: String, val type: AssetType) {
     enum class AssetType { SCENE, SCRIPT, PREFAB, TEXTURE, AUDIO, TILEMAP, FONT, DATA, FOLDER, UNKNOWN }
 
     companion object {
-        fun typeOf(name: String): AssetType = when {
+        fun assetTypeOf(name: String): AssetType = when {
             name.endsWith(".scene") -> AssetType.SCENE
             name.endsWith(".sura") || name.endsWith(".script") -> AssetType.SCRIPT
             name.endsWith(".prefab") -> AssetType.PREFAB
@@ -108,7 +108,7 @@ class Project(val name: String, val rootDir: File) {
         val files = dir.listFiles() ?: return emptyList()
         return files.sortedBy { it.name }.map { f ->
             val rel = f.absolutePath.removePrefix(rootDir.absolutePath).removePrefix("/")
-            ProjectAsset(rel, f.name, if (f.isDirectory) ProjectAsset.AssetType.FOLDER else ProjectAsset.AssetType.typeOf(f.name))
+            ProjectAsset(rel, f.name, if (f.isDirectory) ProjectAsset.AssetType.FOLDER else ProjectAsset.assetTypeOf(f.name))
         }
     }
 

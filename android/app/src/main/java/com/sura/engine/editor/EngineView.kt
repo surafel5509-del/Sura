@@ -283,11 +283,11 @@ class EngineView @JvmOverloads constructor(
             val halfH = size.y * 0.5f * abs(go.transform.scale.y)
             return Rect(go.transform.position.x - halfW, go.transform.position.y - halfH, halfW * 2f, halfH * 2f)
         }
-        val tilemap = go.getComponent<TilemapComponent>()
-        if (tilemap?.tilemap != null) {
-            val map = tilemap.tilemap
-            val width = map.width * tilemap.tileSize
-            val height = map.height * tilemap.tileSize
+        val tilemapComponent = go.getComponent<TilemapComponent>()
+        val map = tilemapComponent?.tilemap
+        if (map != null && tilemapComponent != null) {
+            val width = map.width * tilemapComponent.tileSize
+            val height = map.height * tilemapComponent.tileSize
             return Rect(go.transform.position.x, go.transform.position.y, width, height)
         }
         val collider = go.components.filterIsInstance<com.sura.engine.physics.Collider2D>().firstOrNull()

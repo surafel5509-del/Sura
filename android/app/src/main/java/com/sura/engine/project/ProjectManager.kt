@@ -37,7 +37,12 @@ class ProjectManager(private val platform: Platform) {
         return project
     }
 
-    fun saveProject(project: Project = current ?: return): Boolean {
+    fun saveProject(): Boolean {
+        val project = current ?: return false
+        return saveProject(project)
+    }
+
+    fun saveProject(project: Project): Boolean {
         writeSettings(project)
         platform.saveString("last_project", project.name)
         return true
