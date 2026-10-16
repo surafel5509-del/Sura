@@ -32,5 +32,4 @@ class AudioManager(private val context: Context) : EngineService {
         return sp.play(id, volume * sfxVolume * masterVolume, volume * sfxVolume * masterVolume, 1, if (loop) -1 else 0, 1f)
     }
     fun stopSound(streamId: Int) { soundPool?.stop(streamId) }
-    fun setMasterVolume(v: Float) { masterVolume = v.coerceIn(0f,1f) }
 }

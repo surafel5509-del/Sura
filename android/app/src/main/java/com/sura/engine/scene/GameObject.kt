@@ -13,7 +13,7 @@ class GameObject(var name: String = "GameObject") {
     val children = mutableListOf<GameObject>()
 
     /** Reparents this object under [newParent] (or to the scene root when null). */
-    fun setParent(newParent: GameObject?) {
+    fun attachTo(newParent: GameObject?) {
         parent?.children?.remove(this)
         parent = newParent
         newParent?.children?.add(this)
@@ -35,7 +35,7 @@ class GameObject(var name: String = "GameObject") {
     }
     fun addComponent(c: Component): Component { c.gameObject = this; components.add(c); c.awake(); return c }
     inline fun <reified T : Component> getComponent(): T? = components.filterIsInstance<T>().firstOrNull()
-    inline fun <reified T : Component> getComponents(): List<T> = components.filterIsInstance<T>()
+    inline fun <reified T : Component> getAllComponents(): List<T> = components.filterIsInstance<T>()
     inline fun <reified T : Component> hasComponent(): Boolean = components.any { it is T }
     fun removeComponent(c: Component) { c.onDestroy(); components.remove(c); c.gameObject = null }
     fun update(dt: Float) {

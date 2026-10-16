@@ -129,33 +129,30 @@ class EngineView @JvmOverloads constructor(
         val state = editorState
         val simulate = state == null || state.isPlaying || !isEditorMode
         var dt = time.deltaTime
-        if (state != null && state.isPaused) dt = 0f
-        if (stepRequested) {
+        if (state != null && state.isPaused && !stepRequested) dt = 0f
+        val singleStep = stepRequested
+        if (singleStep) {
             stepRequested = false
             dt = 1f / 60f
         }
         sceneRenderer.sortByLayer = true
-        if ((simulate || stepRequested) && dt > 0f) {
+        if ((simulate || singleStep) && dt > 0f) {
             activeScene?.update(dt)
             scene = activeScene
-            sceneManager?.let { }
         }
-        if (!simulate) {
-            // editing keeps objects alive without running their logic
-        }
-        // camera follow support
+        // camera follow support keeps the view on the primary target
+        val playing = state?.isPlaying ?: false
         activeScene?.allObjects?.forEach { go ->
-            val cam = go.getComponent<CameraComponent>()
-            if (cam != null && cam.followTargetName.isNotEmpty()) {
+            val cam = go.getComponent<CameraComponent>() ?: return@forEach
+            if (cam.followTargetName.isEmpty()) {
+                if (cam.isMain && playing) cam.applyTo(camera)
+            } else {
                 val target = activeScene.findByName(cam.followTargetName)
                 if (target != null) cam.follow(target.transform.position, camera, dt)
             }
         }
         inputManager?.endFrame()
-        state?.profiler?.let { profiler ->
-            profiler.endFrame(time.deltaTime)
-            if (profiler.isRecording) Unit
-        }
+        state?.profiler?.endFrame(time.deltaTime)
     }
 
     private fun drawFrame() {

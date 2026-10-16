@@ -30,5 +30,5 @@ class RigidBody2D : Component() {
         velocity.y += f.y / mass
     }
     fun addImpulse(f: Vector2) { addForce(f) }
-    fun setVelocity(v: Vector2) { velocity = v.copy() }
+    fun applyVelocity(v: Vector2) { velocity = v.copy() }
 }

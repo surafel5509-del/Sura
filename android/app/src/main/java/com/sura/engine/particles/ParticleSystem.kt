@@ -25,9 +25,9 @@ class ParticleSystem : Component() {
         set(value) {
             val clamped = value.coerceIn(1, 20000)
             field = clamped
-            if (particles.size != clamped) {
-                val resized = Array(clamped) { i -> particles.getOrElse(i) { Particle() } }
-                particles = resized
+            if (pool.size != clamped) {
+                val resized = Array(clamped) { i -> pool.getOrElse(i) { Particle() } }
+                pool = resized
             }
         }
     var emissionRate = 20f
@@ -44,7 +44,7 @@ class ParticleSystem : Component() {
     var isPlaying = true
     var loop = true
     var duration = 5f
-    private var particles: Array<Particle> = Array(maxParticles) { Particle() }
+    private var pool: Array<Particle> = Array(maxParticles) { Particle() }
     private var emitAccum = 0f
     private var elapsed = 0f
 
@@ -52,7 +52,7 @@ class ParticleSystem : Component() {
 
     fun emit(count: Int) {
         var emitted = 0
-        for (p in particles) {
+        for (p in pool) {
             if (emitted >= count) break
             if (p.active) continue
             resetParticle(p)
@@ -92,7 +92,7 @@ class ParticleSystem : Component() {
             emitAccum += emissionRate * dt
             while (emitAccum >= 1f) { emit(1); emitAccum -= 1f }
         }
-        for (p in particles) {
+        for (p in pool) {
             if (!p.active) continue
             p.life -= dt
             if (p.life <= 0f) { p.active = false; continue }
@@ -111,5 +111,5 @@ class ParticleSystem : Component() {
         }
     }
 
-    fun getParticles(): List<Particle> = particles.filter { it.active }
+    fun getParticles(): List<Particle> = pool.filter { it.active }
 }

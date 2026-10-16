@@ -168,7 +168,7 @@ class HierarchyView(context: Context, private val state: EditorState) : LinearLa
             true
         }
         menu.menu.add("Move to root").setOnMenuItemClickListener {
-            go.setParent(null)
+            go.attachTo(null)
             state.isDirty = true
             state.notifyChanged()
             true
