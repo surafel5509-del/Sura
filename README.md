@@ -48,12 +48,15 @@ Everything is 100% offline: the engine never asks for the internet, an account o
 
 ## Quick start (build the APK)
 
-### Option A — GitHub Actions (one click, no PC needed)
+### Option A — install the ready-made APK (no PC needed)
 
-1. Push/merge to `main` (or run the workflow manually from the **Actions** tab).
-2. Open the workflow run → **Artifacts** → download `sura-engine-debug-apk`.
-3. Install `app-debug.apk` on your Android device (Android 5.0 / API 21 or newer).
+1. Open **[Releases → v1.0.0](https://github.com/surafel5509-del/Sura/releases/latest)**.
+2. Download **`app-debug.apk`** (installs on any Android 5.0+ device) or the release build.
+3. Install it (allow "install unknown apps" if Android asks).
 4. Launch **Sura Engine** — it opens in landscape with a demo platformer already loaded.
+
+Every push also produces fresh APKs in the workflow run under **Artifacts**
+(`sura-engine-debug-apk`, `sura-engine-release-apk`).
 
 ### Option B — Android Studio / command line
 
