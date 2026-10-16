@@ -1,8 +1,12 @@
 <div align="center">
 
-# 🎮 Sura Engine
+<img src="docs/icon-512.png" width="132" alt="Sura Engine logo">
+
+# Sura Engine
 
 **A complete, professional 2D game engine and editor for Android — built from scratch, fully offline.**
+
+*Design levels, attach physics, write SuraScript, press Play and export an APK — all on your phone.*
 
 [![Build](https://github.com/surafel5509-del/Sura/actions/workflows/build-apk.yml/badge.svg)](https://github.com/surafel5509-del/Sura/actions/workflows/build-apk.yml)
 ![Platform](https://img.shields.io/badge/platform-Android%2021%2B-3ddc84)

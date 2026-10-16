@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0
+
+* Fixed double simulation ticks: one engine tick now drives the clock, scene manager and physics.
+* Pause and single-frame step now freeze the whole simulation (scene + physics).
+* Responsive editor layout for smaller phones and show/hide toggles for both side panels and the console.
+* Physical keyboard shortcuts (Ctrl+Z/Y/S/P/B/G/H, Space, Ctrl+.).
+* Launcher icons for every density (round variant included) plus documentation copies and `tools/make_icons.py`.
+* Added prefab saving, scene manager (open/duplicate/delete/create), project settings dialog and autosave.
+* Added atlas packer, autotiling, sprite-frame animator, OpenGL game view and tag-triggered releases.
+
 ## 1.0.0 — Sura Engine first release
 
 ### Engine
