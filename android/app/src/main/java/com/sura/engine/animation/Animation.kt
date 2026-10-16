@@ -53,7 +53,7 @@ class Animator : Component() {
 
 class Tween(var from: Float, var to: Float, var duration: Float, val onUpdate: (Float) -> Unit, val onComplete: (() -> Unit)? = null) {
     var elapsed = 0f
-    var easing: (Float)->Float = Easing.easeInOutQuad
+    var easing: (Float) -> Float = { t -> Easing.easeInOutQuad(t) }
     var isComplete = false
     fun update(dt: Float) {
         if (isComplete) return

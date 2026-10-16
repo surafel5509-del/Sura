@@ -8,7 +8,11 @@ data class Vector2(var x: Float = 0f, var y: Float = 0f) {
     fun sub(v: Vector2): Vector2 { x -= v.x; y -= v.y; return this }
     fun scale(s: Float): Vector2 { x *= s; y *= s; return this }
     fun length(): Float = sqrt(x * x + y * y)
-    fun normalize(): Vector2 { val l = length(); if (l > 0f) { x /= l; y /= l } return this }
+    fun normalize(): Vector2 {
+        val l = length()
+        if (l > 0f) { x /= l; y /= l }
+        return this
+    }
     fun dot(v: Vector2): Float = x * v.x + y * v.y
     fun distance(v: Vector2): Float { val dx = x - v.x; val dy = y - v.y; return sqrt(dx * dx + dy * dy) }
     fun copy(): Vector2 = Vector2(x, y)
@@ -24,7 +28,11 @@ data class Vector2(var x: Float = 0f, var y: Float = 0f) {
 
 data class Vector3(var x: Float = 0f, var y: Float = 0f, var z: Float = 0f) {
     fun length(): Float = sqrt(x * x + y * y + z * z)
-    fun normalize(): Vector3 { val l = length(); if (l > 0f) { x /= l; y /= l; z /= l } return this }
+    fun normalize(): Vector3 {
+        val l = length()
+        if (l > 0f) { x /= l; y /= l; z /= l }
+        return this
+    }
     fun copy(): Vector3 = Vector3(x, y, z)
     companion object { val ZERO = Vector3(0f,0f,0f); val ONE = Vector3(1f,1f,1f) }
 }

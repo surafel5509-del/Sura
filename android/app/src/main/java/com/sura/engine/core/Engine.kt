@@ -1,7 +1,7 @@
 package com.sura.engine.core
 
 import android.content.Context
-import com.sura.engine.utils.Logger
+import com.sura.engine.core.Logger
 
 class Engine private constructor(val context: Context) {
     val time = Time()
@@ -12,6 +12,7 @@ class Engine private constructor(val context: Context) {
         private set
 
     companion object {
+        private const val MAX_FIXED_STEPS = 5
         @Volatile private var instance: Engine? = null
         fun init(context: Context): Engine {
             if (instance == null) {
@@ -43,9 +44,21 @@ class Engine private constructor(val context: Context) {
         Logger.i("Engine stopped")
     }
 
+    private var fixedAccumulator = 0f
+    var fixedTimeStep: Float = 1f / 60f
+
     fun update() {
         if (!isRunning || isPaused) return
         time.update(System.currentTimeMillis())
-        services.updateAll(time.deltaTime)
+        val dt = time.deltaTime
+        services.updateAll(dt)
+        fixedAccumulator += dt
+        var steps = 0
+        while (fixedAccumulator >= fixedTimeStep && steps < MAX_FIXED_STEPS) {
+            services.fixedUpdateAll(fixedTimeStep)
+            fixedAccumulator -= fixedTimeStep
+            steps++
+        }
+        if (steps >= MAX_FIXED_STEPS) fixedAccumulator = 0f
     }
 }

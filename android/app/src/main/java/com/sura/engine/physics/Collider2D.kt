@@ -4,6 +4,13 @@ import com.sura.engine.scene.Component
 import com.sura.engine.utils.Vector2
 
 abstract class Collider2D : Component() {
+    override fun awake() { world()?.registerCollider(this) }
+    override fun onDestroy() { world()?.unregisterCollider(this) }
+
+    private fun world(): PhysicsWorld? =
+        if (com.sura.engine.core.Engine.isInitialized())
+            com.sura.engine.core.Engine.get().services.get(PhysicsWorld::class.java) else null
+
     var isTrigger = false
     var offset = Vector2(0f, 0f)
     var friction = 0.5f

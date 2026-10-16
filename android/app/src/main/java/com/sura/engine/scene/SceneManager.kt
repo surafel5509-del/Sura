@@ -1,7 +1,7 @@
 package com.sura.engine.scene
 
 import com.sura.engine.core.EngineService
-import com.sura.engine.utils.Logger
+import com.sura.engine.core.Logger
 
 class SceneManager : EngineService {
     val scenes = linkedMapOf<String, Scene>()

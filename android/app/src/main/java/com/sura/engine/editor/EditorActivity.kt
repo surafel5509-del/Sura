@@ -1,102 +1,87 @@
 package com.sura.engine.editor
 
+import android.os.Build
 import android.os.Bundle
-import android.widget.Button
-import android.widget.Toast
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import com.sura.engine.R
 import com.sura.engine.core.Engine
-import com.sura.engine.core.ServiceLocator
-import com.sura.engine.input.InputManager
-import com.sura.engine.platform.Platform
-import com.sura.engine.scene.Scene
-import com.sura.engine.scene.SceneManager
+import com.sura.engine.core.Logger
 
+/**
+ * The Sura Engine editor - a full landscape IDE for building 2D games on the device.
+ * Everything runs offline: no account, no network, no external tools required.
+ */
 class EditorActivity : AppCompatActivity() {
-    private lateinit var engineView: EngineView
-    private lateinit var hierarchy: HierarchyPanel
-    private lateinit var inspector: InspectorPanel
-    private lateinit var console: ConsolePanel
-    private lateinit var sceneManager: SceneManager
-    private lateinit var inputManager: InputManager
+
+    private lateinit var screen: EditorScreen
+    private var ticker: Thread? = null
+    @Volatile private var ticking = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_editor)
+        enableImmersiveFullscreen()
+        Engine.get()
+        screen = EditorScreen(this)
+        setContentView(screen)
+        startTicker()
+        Logger.i("EditorActivity started")
+    }
 
-        val engine = Engine.get()
-        sceneManager = SceneManager()
-        inputManager = InputManager()
-        engine.services.register(SceneManager::class.java, sceneManager)
-        engine.services.register(InputManager::class.java, inputManager)
-        engine.services.register(com.sura.engine.physics.PhysicsWorld::class.java, com.sura.engine.physics.PhysicsWorld())
-        engine.services.register(com.sura.engine.audio.AudioManager::class.java, com.sura.engine.audio.AudioManager(this))
-        val assetManager = com.sura.engine.assets.AssetManager(this)
-        engine.services.register(com.sura.engine.assets.AssetManager::class.java, assetManager)
-        engine.start()
-
-        engineView = findViewById(R.id.engineView)
-        hierarchy = findViewById(R.id.hierarchyPanel)
-        inspector = findViewById(R.id.inspectorPanel)
-        console = findViewById(R.id.consolePanel)
-
-        engineView.inputManager = inputManager
-        engineView.scene = sceneManager.createScene("MainScene")
-        sceneManager.loadScene("MainScene")
-
-        // seed scene with sample objects
-        val scene = sceneManager.activeScene!!
-        val player = scene.createGameObject("Player")
-        player.transform.position.set(0f, 0f)
-        val cam = scene.createGameObject("Main Camera")
-        cam.tag = "MainCamera"
-        val light = scene.createGameObject("Directional Light")
-        light.tag = "Light"
-
-        hierarchy.refresh(scene)
-        hierarchy.onObjectSelected = { go -> inspector.inspect(go) }
-
-        findViewById<Button>(R.id.btnPlay).setOnClickListener {
-            engineView.isEditorMode = false
-            console.log("INFO: Entering play mode")
-            Toast.makeText(this, "Play mode", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<Button>(R.id.btnPause).setOnClickListener {
-            engine.pause()
-            console.log("INFO: Paused")
-        }
-        findViewById<Button>(R.id.btnStop).setOnClickListener {
-            engine.resume()
-            engineView.isEditorMode = true
-            console.log("INFO: Stopped play mode")
-        }
-        findViewById<Button>(R.id.btnBuild).setOnClickListener {
-            com.sura.engine.build.BuildManager().buildDebug { ok, msg ->
-                runOnUiThread { console.log(if (ok) "INFO: $msg" else "ERROR: $msg") }
+    private fun enableImmersiveFullscreen() {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
             }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                )
         }
-        findViewById<Button>(R.id.tabScene).setOnClickListener {
-            engineView.isEditorMode = true
-            console.log("INFO: Scene view")
-        }
-        findViewById<Button>(R.id.tabGame).setOnClickListener {
-            engineView.isEditorMode = false
-            console.log("INFO: Game view")
-        }
+    }
 
-        com.sura.engine.utils.Logger.i("EditorActivity created")
+    private fun startTicker() {
+        ticking = true
+        ticker = Thread {
+            while (ticking) {
+                try {
+                    runOnUiThread { if (!isFinishing) screen.onTick() }
+                    Thread.sleep(250)
+                } catch (e: InterruptedException) {
+                    break
+                } catch (t: Throwable) {
+                    Logger.e("Editor tick failed: ${t.message}")
+                }
+            }
+        }.also { it.start() }
     }
 
     override fun onResume() {
         super.onResume()
         Engine.get().resume()
     }
+
     override fun onPause() {
         super.onPause()
         Engine.get().pause()
     }
+
     override fun onDestroy() {
         super.onDestroy()
+        ticking = false
+        ticker?.interrupt()
+        ticker = null
+        try {
+            screen.shutdown()
+        } catch (t: Throwable) {
+            Logger.e("Shutdown failed: ${t.message}")
+        }
         Engine.get().stop()
     }
 }

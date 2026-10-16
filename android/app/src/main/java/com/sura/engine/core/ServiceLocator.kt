@@ -6,6 +6,7 @@ interface EngineService {
     fun pause() {}
     fun resume() {}
     fun update(dt: Float) {}
+    fun fixedUpdate(dt: Float) {}
 }
 
 class ServiceLocator {
@@ -27,5 +28,6 @@ class ServiceLocator {
     fun pauseAll() { order.forEach { it.pause() } }
     fun resumeAll() { order.forEach { it.resume() } }
     fun updateAll(dt: Float) { order.forEach { it.update(dt) } }
+    fun fixedUpdateAll(dt: Float) { order.forEach { it.fixedUpdate(dt) } }
     fun clear() { services.clear(); order.clear() }
 }

@@ -464,7 +464,7 @@ class Interpreter {
             if (map is Map<*, *>) map.keys.toList() else emptyList<Any?>()
         }
         natives["type"] = { typeName(it.getOrNull(0)) }
-        natives["println"] = natives["print"]
+        natives["print"]?.let { printer -> natives["println"] = printer }
     }
 }
 

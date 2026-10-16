@@ -6,6 +6,13 @@ import com.sura.engine.utils.Vector2
 enum class BodyType { STATIC, KINEMATIC, DYNAMIC }
 
 class RigidBody2D : Component() {
+    override fun awake() { world()?.registerBody(this) }
+    override fun onDestroy() { world()?.unregisterBody(this) }
+
+    private fun world(): PhysicsWorld? =
+        if (com.sura.engine.core.Engine.isInitialized())
+            com.sura.engine.core.Engine.get().services.get(PhysicsWorld::class.java) else null
+
     var bodyType = BodyType.DYNAMIC
     var mass = 1f
     var gravityScale = 1f

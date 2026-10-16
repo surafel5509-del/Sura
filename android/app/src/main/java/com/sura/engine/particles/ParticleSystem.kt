@@ -21,7 +21,15 @@ class Particle {
 }
 
 class ParticleSystem : Component() {
-    var maxParticles = 200
+    var maxParticles: Int = 200
+        set(value) {
+            val clamped = value.coerceIn(1, 20000)
+            field = clamped
+            if (particles.size != clamped) {
+                val resized = Array(clamped) { i -> particles.getOrElse(i) { Particle() } }
+                particles = resized
+            }
+        }
     var emissionRate = 20f
     var lifetime = 1f
     var speed = 100f
@@ -36,7 +44,7 @@ class ParticleSystem : Component() {
     var isPlaying = true
     var loop = true
     var duration = 5f
-    private val particles = Array(maxParticles) { Particle() }
+    private var particles: Array<Particle> = Array(maxParticles) { Particle() }
     private var emitAccum = 0f
     private var elapsed = 0f
 

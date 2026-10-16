@@ -1,5 +1,7 @@
 package com.sura.engine.ui
 
+import com.sura.engine.rendering.Renderer
+import com.sura.engine.scene.Component
 import com.sura.engine.utils.Color
 import com.sura.engine.utils.Rect
 import com.sura.engine.utils.Vector2
@@ -218,4 +220,77 @@ class LayoutGroup : UIElement() {
         }
     }
     override fun update(dt: Float) { arrange(); super.update(dt) }
+}
+
+
+/**
+ * Attaches a UI canvas to a GameObject so screens, HUDs and menus can live in the scene graph.
+ * The canvas uses a fixed design resolution and is stretched to the device viewport.
+ */
+class UIElementHolder : Component() {
+    val canvas = Canvas()
+    var designWidth = 1280f
+    var designHeight = 720f
+    var scaleWithScreen = true
+    var visible = true
+
+    override fun awake() {
+        canvas.width = designWidth
+        canvas.height = designHeight
+        canvas.name = gameObject?.name ?: "Canvas"
+    }
+
+    fun layout(viewportWidth: Float, viewportHeight: Float) {
+        if (!scaleWithScreen) {
+            canvas.width = designWidth
+            canvas.height = designHeight
+            return
+        }
+        canvas.width = viewportWidth
+        canvas.height = viewportHeight
+    }
+
+    fun render(renderer: Renderer) {
+        if (!visible) return
+        canvas.render(renderer)
+    }
+
+    fun handleTouch(x: Float, y: Float, type: UIElement.TouchType): Boolean =
+        visible && canvas.handleTouch(x, y, type)
+
+    override fun update(dt: Float) { canvas.update(dt) }
+
+    fun button(text: String, x: Float, y: Float, width: Float, height: Float, onClick: () -> Unit): Button {
+        val button = Button()
+        button.text = text
+        button.rect.x = x
+        button.rect.y = y
+        button.rect.w = width
+        button.rect.h = height
+        button.onClick = onClick
+        canvas.addChild(button)
+        return button
+    }
+
+    fun label(text: String, x: Float, y: Float, size: Float = 18f): Label {
+        val label = Label()
+        label.text = text
+        label.fontSize = size
+        label.rect.x = x
+        label.rect.y = y
+        label.rect.w = 240f
+        label.rect.h = size + 8f
+        canvas.addChild(label)
+        return label
+    }
+
+    fun panel(x: Float, y: Float, width: Float, height: Float): Panel {
+        val panel = Panel()
+        panel.rect.x = x
+        panel.rect.y = y
+        panel.rect.w = width
+        panel.rect.h = height
+        canvas.addChild(panel)
+        return panel
+    }
 }

@@ -2,7 +2,6 @@ package com.sura.engine.core
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 
 /** Tiny worker pool used for background asset loading / build tasks (keeps the render thread free). */
 class JobSystem(threads: Int = Runtime.getRuntime().availableProcessors().coerceIn(1, 4)) : EngineService {
@@ -52,7 +51,7 @@ class JobSystem(threads: Int = Runtime.getRuntime().availableProcessors().coerce
 
 /** Simple timed scheduler for gameplay callbacks (delays, repeats, cooldowns). */
 class Scheduler : EngineService {
-    private class Task(var delay: Float, var interval: Float, var repeat: Boolean, var action: () -> Unit, var cancelled: Boolean = false)
+    class Task(var delay: Float, var interval: Float, var repeat: Boolean, var action: () -> Unit, var cancelled: Boolean = false)
 
     private val tasks = mutableListOf<Task>()
 

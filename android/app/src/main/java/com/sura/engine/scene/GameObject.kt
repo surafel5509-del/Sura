@@ -1,6 +1,6 @@
 package com.sura.engine.scene
 
-import com.sura.engine.utils.Logger
+import com.sura.engine.core.Logger
 
 class GameObject(var name: String = "GameObject") {
     val transform = Transform()
@@ -9,6 +9,22 @@ class GameObject(var name: String = "GameObject") {
     var layer = 0
     var active = true
     var scene: Scene? = null
+    var parent: GameObject? = null
+    val children = mutableListOf<GameObject>()
+
+    /** Reparents this object under [newParent] (or to the scene root when null). */
+    fun setParent(newParent: GameObject?) {
+        parent?.children?.remove(this)
+        parent = newParent
+        newParent?.children?.add(this)
+        newParent?.transform?.addChild(transform)
+        (scene ?: newParent?.scene)?.let { s ->
+            s.rootObjects.remove(this)
+            if (newParent == null && !s.rootObjects.contains(this)) s.rootObjects.add(this)
+        }
+    }
+
+    fun countDescendants(): Int = children.sumOf { 1 + it.countDescendants() }
 
     inline fun <reified T : Component> addComponent(): T {
         val c = T::class.java.getDeclaredConstructor().newInstance()

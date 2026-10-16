@@ -1,7 +1,7 @@
 package com.sura.engine.utils
 
 /** Deterministic Xorshift128+ style generator so games can be fully reproducible offline. */
-class Random(seed: Long = 0x9E3779B97F4A7C15L) {
+class Random(seed: Long = 0x9E3779B97F4A7C15uL.toLong()) {
     private var s0: Long
     private var s1: Long
 
@@ -13,9 +13,9 @@ class Random(seed: Long = 0x9E3779B97F4A7C15L) {
     }
 
     private fun splitmix(x: Long): Long {
-        var z = x + 0x9E3779B97F4A7C15L
+        var z = x + 0x9E3779B97F4A7C15uL.toLong()
         z = (z xor (z ushr 30)) * 0xBF58476D1CE4E5B9L
-        z = (z xor (z ushr 27)) * 0x94D049BB133111EBL
+        z = (z xor (z ushr 27)) * 0x94D049BB133111EBuL.toLong()
         return z xor (z ushr 31)
     }
 
