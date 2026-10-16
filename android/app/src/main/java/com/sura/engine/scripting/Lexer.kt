@@ -60,7 +60,11 @@ class Lexer(private val source: String) {
         while (pos < source.length) {
             val c = source[pos]
             if (c.isDigit()) { pos++; continue }
-            if (c == '.' && !seenDot) { seenDot = true; pos++; continue }
+            if (c == '.' && !seenDot && pos + 1 < source.length && source[pos + 1].isDigit()) {
+                seenDot = true
+                pos++
+                continue
+            }
             break
         }
         val text = source.substring(start, pos)

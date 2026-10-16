@@ -85,6 +85,23 @@ class SuraScriptTest {
         assertTrue("infinite loop should be interrupted", threw)
     }
 
+    @Test fun rangeOperatorIsLexedSeparately() {
+        val tokens = com.sura.engine.scripting.Lexer("for i in 1..10 { }").tokenize()
+        assertEquals(com.sura.engine.scripting.TokenType.NUMBER, tokens[3].type)
+        assertEquals("1", tokens[3].text)
+        assertEquals(com.sura.engine.scripting.TokenType.OP, tokens[4].type)
+        assertEquals("..", tokens[4].text)
+        assertEquals(com.sura.engine.scripting.TokenType.NUMBER, tokens[5].type)
+        assertEquals("10", tokens[5].text)
+    }
+
+    @Test fun decimalsStillLexCorrectly() {
+        val interpreter = run("var a = 1.5\nvar b = .25\nvar c = 2.0")
+        assertEquals(1.5, interpreter.getGlobal("a") as Double, 0.0001)
+        assertEquals(0.25, interpreter.getGlobal("b") as Double, 0.0001)
+        assertEquals(2.0, interpreter.getGlobal("c") as Double, 0.0001)
+    }
+
     @Test fun syntaxErrorsAreReported() {
         val interpreter = Interpreter()
         var message = ""
