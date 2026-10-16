@@ -19,12 +19,25 @@ class PhysicsWorld : EngineService {
     fun unregisterBody(b: RigidBody2D) { bodies.remove(b) }
     fun unregisterCollider(c: Collider2D) { colliders.remove(c) }
 
+    var simulationPaused = false
+    var pendingStep = false
+
     override fun update(dt: Float) {
+        if (simulationPaused && !pendingStep) return
+        if (pendingStep) {
+            pendingStep = false
+            accumulator = 0f
+            fixedUpdate(fixedDeltaTime)
+            return
+        }
         accumulator += dt
-        while (accumulator >= fixedDeltaTime) {
+        var steps = 0
+        while (accumulator >= fixedDeltaTime && steps < 6) {
             fixedUpdate(fixedDeltaTime)
             accumulator -= fixedDeltaTime
+            steps++
         }
+        if (steps >= 6) accumulator = 0f
     }
 
     override fun fixedUpdate(dt: Float) {

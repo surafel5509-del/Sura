@@ -34,6 +34,19 @@ class SceneManager : EngineService {
         if (activeScene?.name == name) { activeScene = null; onSceneChanged.invoke(null) }
         scenes.remove(name)
     }
-    override fun update(dt: Float) { activeScene?.update(dt) }
+    /** Editor/player simulation controls: pause freezes the scene, step runs one fixed tick. */
+    var simulationPaused = false
+    var pendingStep = false
+    var stepDeltaTime = 1f / 60f
+
+    override fun update(dt: Float) {
+        if (simulationPaused && !pendingStep) return
+        val step = if (pendingStep) {
+            pendingStep = false
+            stepDeltaTime
+        } else dt
+        activeScene?.update(step)
+    }
+
     override fun fixedUpdate(dt: Float) { activeScene?.fixedUpdate(dt) }
 }

@@ -6,7 +6,6 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import com.sura.engine.core.Engine
-import com.sura.engine.core.Time
 import com.sura.engine.input.InputManager
 import com.sura.engine.rendering.Camera
 import com.sura.engine.rendering.CameraComponent
@@ -35,7 +34,6 @@ class GLGameView @JvmOverloads constructor(
     var targetFps = 60
 
     private val sceneRenderer = SceneRenderer(glRenderer)
-    private val time = Time()
     private val uiRoot = com.sura.engine.ui.Canvas()
     private var initialized = false
 
@@ -67,12 +65,10 @@ class GLGameView @JvmOverloads constructor(
     }
 
     private fun tick() {
-        val now = System.currentTimeMillis()
-        time.update(now)
+        // Engine.update() drives the clock and every service (scene manager, physics, audio, jobs)
         Engine.get().update()
-        val dt = time.deltaTime
+        val dt = Engine.get().time.deltaTime
         val activeScene = scene ?: return
-        activeScene.update(dt)
         uiRoot.update(dt)
         activeScene.allObjects.forEach { go ->
             val cam = go.getComponent<CameraComponent>() ?: return@forEach
@@ -117,6 +113,6 @@ class GLGameView @JvmOverloads constructor(
         return true
     }
 
-    fun fps(): Float = time.fps
-    fun frameTime(): Float = time.deltaTime
+    fun fps(): Float = Engine.get().time.fps
+    fun frameTime(): Float = Engine.get().time.deltaTime
 }

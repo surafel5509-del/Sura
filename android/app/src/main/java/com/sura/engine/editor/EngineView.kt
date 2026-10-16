@@ -10,7 +10,6 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.sura.engine.core.Engine
-import com.sura.engine.core.Time
 import com.sura.engine.input.InputManager
 import com.sura.engine.physics.PhysicsWorld
 import com.sura.engine.rendering.Camera
@@ -51,7 +50,6 @@ class EngineView @JvmOverloads constructor(
     var showColliders = false
     var backgroundColor = Color(0.07f, 0.08f, 0.13f, 1f)
 
-    private val time = Time()
     private val sceneRenderer = SceneRenderer(renderer)
     private var thread: Thread? = null
     @Volatile private var running = false
@@ -123,24 +121,34 @@ class EngineView @JvmOverloads constructor(
     }
 
     private fun updateFrame() {
-        val now = System.currentTimeMillis()
-        time.update(now)
-        val activeScene = editorState?.scene ?: scene
+        // Engine.update() advances the clock and ticks every registered service exactly once,
+        // which drives both the SceneManager (component lifecycle) and the PhysicsWorld.
+        Engine.get().update()
         val state = editorState
-        val simulate = state == null || state.isPlaying || !isEditorMode
-        var dt = time.deltaTime
-        if (state != null && state.isPaused && !stepRequested) dt = 0f
-        val singleStep = stepRequested
-        if (singleStep) {
-            stepRequested = false
-            dt = 1f / 60f
+        val simulatedDt = Engine.get().time.deltaTime
+        val paused = state?.isPaused == true
+        val manager = sceneManager ?: Engine.get().services.get(SceneManager::class.java)
+        val world = PhysicsWorldHolder.world
+        val stepping = stepRequested
+        if (stepping) stepRequested = false
+
+        // keep the simulated scene in sync with the scene shown in the view
+        val shown = editorState?.scene
+        if (manager != null && shown != null && manager.activeScene !== shown) {
+            manager.loadScene(shown)
         }
-        sceneRenderer.sortByLayer = true
-        if ((simulate || singleStep) && dt > 0f) {
-            activeScene?.update(dt)
-            scene = activeScene
+
+        manager?.simulationPaused = paused && !stepping
+        world?.simulationPaused = paused && !stepping
+        if (stepping) {
+            manager?.pendingStep = true
+            world?.pendingStep = true
         }
-        // camera follow support keeps the view on the primary target
+
+        val activeScene = editorState?.scene ?: scene
+        val dt = if (paused && !stepping) 0f else simulatedDt
+
+        // camera follow keeps the view locked to the primary camera target
         val playing = state?.isPlaying ?: false
         activeScene?.allObjects?.forEach { go ->
             val cam = go.getComponent<CameraComponent>() ?: return@forEach
@@ -151,8 +159,9 @@ class EngineView @JvmOverloads constructor(
                 if (target != null) cam.follow(target.transform.position, camera, dt)
             }
         }
+
         inputManager?.endFrame()
-        state?.profiler?.endFrame(time.deltaTime)
+        state?.profiler?.endFrame(Engine.get().time.deltaTime)
     }
 
     private fun drawFrame() {
@@ -251,7 +260,7 @@ class EngineView @JvmOverloads constructor(
     private fun drawStats(canvas: Canvas, activeScene: Scene?) {
         val state = editorState
         val lines = mutableListOf<String>()
-        lines.add("FPS ${time.fps.toInt()}   frame ${"%.1f".format(time.deltaTime * 1000f)} ms")
+        lines.add("FPS ${Engine.get().time.fps.toInt()}   frame ${"%.1f".format(Engine.get().time.deltaTime * 1000f)} ms")
         lines.add("Objects ${activeScene?.allObjects?.size ?: 0}   Components ${activeScene?.componentCount() ?: 0}")
         val world = PhysicsWorldHolder.world
         if (world != null) lines.add("Bodies ${world.bodyCount()}   Colliders ${world.colliderCount()}")
