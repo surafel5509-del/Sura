@@ -1,0 +1,42 @@
+// PlayerController.sura - side scrolling platformer player
+// Attach to a GameObject with a SpriteRenderer + RigidBody2D + BoxCollider2D.
+
+var speed = 180
+var jumpForce = 420
+var gravity = 900
+var velocityY = 0
+var grounded = true
+var groundLevel = 400
+
+function start() {
+    groundLevel = y
+    log("player ready at " + x + "," + y)
+}
+
+function update(dt) {
+    velocityY = velocityY - gravity * dt
+    y = y + velocityY * dt
+
+    if (y <= groundLevel) {
+        y = groundLevel
+        velocityY = 0
+        grounded = true
+    }
+
+    if (touchActive()) {
+        var half = screenWidth() / 2
+        if (touchX() < half) {
+            move(0 - speed * dt, 0)
+        } else {
+            move(speed * dt, 0)
+            if (grounded) {
+                velocityY = jumpForce
+                grounded = false
+            }
+        }
+    }
+}
+
+function onCollision(other) {
+    log("hit " + other)
+}

@@ -1,0 +1,16 @@
+// Coin.sura - floating pickup with a sine bob and a spin timer.
+
+var bobSpeed = 3
+var bobHeight = 8
+var baseY = 0
+var spin = 0
+
+function start() {
+    baseY = y
+}
+
+function update(dt) {
+    spin = spin + 180 * dt
+    rotation = spin
+    y = baseY + bobHeight * sin(engineTime() * bobSpeed)
+}

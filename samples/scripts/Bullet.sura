@@ -1,0 +1,15 @@
+// Bullet.sura - simple projectile that destroys itself when leaving the screen.
+
+var speed = 520
+var life = 2
+
+function update(dt) {
+    move(0, 0 - speed * dt)
+    life = life - dt
+    if (life <= 0) {
+        destroySelf()
+    }
+    if (y < 0 - 200) {
+        destroySelf()
+    }
+}

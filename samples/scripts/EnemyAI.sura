@@ -1,0 +1,34 @@
+// EnemyAI.sura - patrols, chases the player when close, damages on contact.
+// Uses the navigation helper functions exposed by the engine.
+
+var patrolSpeed = 60
+var chaseSpeed = 130
+var direction = 1
+var leftLimit = 100
+var rightLimit = 500
+var attackRange = 140
+
+function update(dt) {
+    var playerDistance = distanceTo("Player")
+
+    if (playerDistance < attackRange) {
+        var targetX = objectX("Player")
+        if (targetX > x) {
+            move(chaseSpeed * dt, 0)
+            direction = 1
+        } else {
+            move(0 - chaseSpeed * dt, 0)
+            direction = 0 - 1
+        }
+    } else {
+        move(direction * patrolSpeed * dt, 0)
+        if (x > rightLimit) { direction = 0 - 1 }
+        if (x < leftLimit) { direction = 1 }
+    }
+}
+
+function onCollision(other) {
+    if (other == "Player") {
+        log("player hit by enemy")
+    }
+}

@@ -1,24 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Sura" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorError">@color/red_200</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <item name="colorOnError">@color/black</item>
-        <item name="colorOnBackground">@color/black</item>
-        <item name="colorOnSurface">@color/black</item>
+    <style name="Theme.SuraEngine" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">#1E1E2E</item>
+        <item name="colorPrimaryVariant">#11111B</item>
+        <item name="colorSecondary">#89B4FA</item>
+        <item name="colorSecondaryVariant">#74C7EC</item>
+        <item name="colorError">#F38BA8</item>
+        <item name="colorOnPrimary">#CDD6F4</item>
+        <item name="colorOnSecondary">#1E1E2E</item>
+        <item name="colorOnBackground">#CDD6F4</item>
+        <item name="colorOnSurface">#CDD6F4</item>
+        <item name="android:windowBackground">#1E1E2E</item>
     </style>
-    
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="red_200">#FFCF6679</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
+    <style name="Theme.SuraEngine.Fullscreen" parent="Theme.SuraEngine">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <color name="engine_bg">#1E1E2E</color>
+    <color name="engine_panel">#313244</color>
+    <color name="engine_panel_light">#45475A</color>
+    <color name="engine_accent">#89B4FA</color>
+    <color name="engine_text">#CDD6F4</color>
+    <color name="engine_text_dim">#A6ADC8</color>
+    <color name="engine_success">#A6E3A1</color>
+    <color name="engine_warn">#F9E2AF</color>
+    <color name="engine_error">#F38BA8</color>
 </resources>
