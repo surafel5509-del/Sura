@@ -31,7 +31,8 @@ class AtlasAndAnimationTest {
         val normalized = hero.rect(result.width, result.height)
         assertTrue(normalized.w > 0f && normalized.w <= 1f)
         assertTrue(packer.nextPowerOfTwo(300) >= 300)
-        assertTrue(packer.nextPowerOfTwo(1024) == 1024 || packer.nextPowerOfTwo(1024) == 256)
+        assertEquals(1024, packer.nextPowerOfTwo(1024))
+        assertEquals(1, packer.nextPowerOfTwo(0))
     }
 
     @Test fun atlasEntriesParseFromText() {
@@ -47,10 +48,13 @@ class AtlasAndAnimationTest {
         val mask = AutoTile.mask(solid, 1, 1)
         assertEquals(AutoTile.NORTH or AutoTile.EAST or AutoTile.SOUTH or AutoTile.WEST, mask)
 
-        // top-left corner of a fully solid map exposes north and west
+        // a fully surrounded tile exposes no edges
         val allSolid = { _: Int, _: Int -> true }
-        val corner = AutoTile.mask(allSolid, 0, 0)
-        assertEquals(AutoTile.NORTH or AutoTile.WEST, corner)
+        assertEquals(0, AutoTile.mask(allSolid, 0, 0))
+
+        // the top-left tile of a 2x2 block is exposed to the north and to the west
+        val block = { x: Int, y: Int -> x in 0..1 && y in 0..1 }
+        assertEquals(AutoTile.NORTH or AutoTile.WEST, AutoTile.mask(block, 0, 0))
     }
 
     @Test fun autotileRetilesALayer() {

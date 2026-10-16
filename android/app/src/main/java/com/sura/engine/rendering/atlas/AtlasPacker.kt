@@ -62,17 +62,19 @@ class AtlasPacker(val maxWidth: Int = 2048, val maxHeight: Int = 2048, val paddi
 
         val atlasHeight = (shelfY + shelfHeight).coerceAtMost(maxHeight)
         return Result(
-            width = nextPowerOfTwo(atlasWidth.coerceAtLeast(1)),
-            height = nextPowerOfTwo(atlasHeight.coerceAtLeast(1)),
+            width = nextPowerOfTwo(atlasWidth.coerceAtLeast(1)).coerceAtMost(maxWidth),
+            height = nextPowerOfTwo(atlasHeight.coerceAtLeast(1)).coerceAtMost(maxHeight),
             placements = placements,
             unpacked = unpacked
         )
     }
 
+    /** Smallest power of two greater than or equal to [value] (no clamping). */
     fun nextPowerOfTwo(value: Int): Int {
+        if (value <= 1) return 1
         var result = 1
         while (result < value) result = result shl 1
-        return result.coerceAtMost(maxWidth)
+        return result
     }
 
     companion object {
