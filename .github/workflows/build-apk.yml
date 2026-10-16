@@ -1,22 +1,31 @@
-name: Build Debug APK
+name: Build Sura Engine APK
 
 on:
   push:
     branches:
       - main
+      - 'arena/**'
+      - 'arena-*'
       - 'codespace-**'
+      - 'feature/**'
+  pull_request:
   workflow_dispatch: {}
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+  ANDROID_HOME: ${{ github.workspace }}/android-sdk
+  GRADLE_VERSION: 8.7
+  ANDROID_API_LEVEL: 33
+  ANDROID_BUILD_TOOLS: 33.0.2
+
 jobs:
-  build-debug-apk:
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-      ANDROID_HOME: ${{ github.workspace }}/android-sdk
-      GRADLE_VERSION: 9.4
-      ANDROID_BUILD_TOOLS: 33.0.2
-      ANDROID_API_LEVEL: 33
-      ANDROID_NDK_VERSION: 25.1.8937393
 
     steps:
       - name: Checkout
@@ -28,57 +37,99 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install unzip and wget
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Install SDK tooling
         run: sudo apt-get update && sudo apt-get install -y unzip wget
 
       - name: Download Android command line tools
         run: |
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
           cd "$ANDROID_SDK_ROOT/cmdline-tools"
-          TOOL_Z=commandlinetools-linux_latest.zip
-          wget -q -O "$TOOL_Z" https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip -q "$TOOL_Z" -d tmp && rm -f "$TOOL_Z"
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
-          mv tmp/cmdline-tools/* "$ANDROID_SDK_ROOT/cmdline-tools/latest/" || true
+          wget -q -O tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          rm -rf tmp latest
+          unzip -q tools.zip -d tmp
+          mkdir -p latest
+          mv tmp/cmdline-tools/* latest/ 2>/dev/null || true
+          rm -rf tmp tools.zip
 
-      - name: Update PATH for sdkmanager
+      - name: Configure SDK path
         run: |
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept licenses
-        run: yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
-
-      - name: Install Android SDK components
+      - name: Accept licenses & install platform
         run: |
-          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --install "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" "ndk;${ANDROID_NDK_VERSION}"
-
-      - name: Set NDK environment variables
-        run: |
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/$ANDROID_NDK_VERSION" >> $GITHUB_ENV
-          echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/$ANDROID_NDK_VERSION" >> $GITHUB_ENV
+          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null || true
+          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --install "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
 
       - name: Show environment
         run: |
           java -version
           gradle -v
-          sdkmanager --version || true
-          echo "ANDROID_NDK=$ANDROID_NDK"
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          echo "SDK: $ANDROID_SDK_ROOT"
+
+      - name: Run unit tests
+        working-directory: android
+        run: gradle :app:testDebugUnitTest --no-daemon --stacktrace
 
       - name: Build debug APK
         working-directory: android
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Build release APK (unsigned)
+        working-directory: android
+        run: gradle :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Collect build outputs
+        if: always()
         run: |
-          if [ -x ./gradlew ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleDebug --no-daemon -v --stacktrace
-          else
-            gradle assembleDebug --no-daemon -v --stacktrace
-          fi
+          mkdir -p build-artifacts
+          find android/app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \) -exec cp {} build-artifacts/ \; 2>/dev/null || true
+          ls -la build-artifacts || true
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: app-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: sura-engine-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sura-engine-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-reports
+          path: android/app/build/reports/tests/**/*
+          if-no-files-found: ignore
+
+  release:
+    name: Publish APK to GitHub Releases
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*.apk
+          generate_release_notes: true
