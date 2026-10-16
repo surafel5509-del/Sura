@@ -71,12 +71,11 @@ class AtlasAndAnimationTest {
         go.addComponent(animator)
         animator.sheet = SpriteSheet(columns = 4, rows = 1)
         animator.addClip("walk", listOf(0, 1, 2, 3), fps = 10f, loop = true)
-        go.start()
         animator.play("walk")
         assertEquals(0, animator.currentFrameNumber())
         repeat(6) { animator.update(0.1f) }
         assertTrue(animator.frameIndex in 0..3)
-        assertTrue(sprite.sprite != null || true)
+        assertTrue("sprite instance should be created by the animator", sprite.sprite != null)
         assertTrue(animator.isPlaying)
         assertTrue(animator.effectiveFps() == 10f)
     }
